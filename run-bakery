@@ -11,6 +11,10 @@ RUGIX_CONTEXT_DIR=${RUGIX_CONTEXT_DIR:-""}
 
 RUGIX_CACHE_VOLUME=${RUGIX_CACHE_VOLUME:-"rugix-build-cache"}
 
+# Optional: path to custom binaries directory to bind-mount over /usr/share/rugix/binaries
+# This allows testing with freshly built binaries without rebuilding the bakery image.
+RUGIX_BINARIES_DIR=${RUGIX_BINARIES_DIR:-""}
+
 if [ "${RUGIX_DEV}" = "false" ]; then
     RUGIX_VERSION=${RUGIX_VERSION:-"v0.8"}
 else
@@ -32,6 +36,11 @@ fi
 if [ -n "${RUGIX_CACHE_VOLUME}" ]; then
     $DOCKER volume create "${RUGIX_CACHE_VOLUME}" >/dev/null
     DOCKER_FLAGS="${DOCKER_FLAGS} -v ${RUGIX_CACHE_VOLUME}:/run/rugix/bakery/cache"
+fi
+
+if [ -n "${RUGIX_BINARIES_DIR}" ]; then
+    # Bind-mount custom binaries over the image's binaries directory
+    DOCKER_FLAGS="${DOCKER_FLAGS} -v ${RUGIX_BINARIES_DIR}:/usr/share/rugix/binaries:ro"
 fi
 
 if [ "${1:-}" == "run" ]; then
