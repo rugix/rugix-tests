@@ -13,4 +13,5 @@ openssl ecparam -name prime256v1 -genkey -noout -out keys/signer.key
 openssl req -new -key keys/signer.key -out keys/signer.csr -subj "/CN=Update Signer"
 openssl x509 -req -in keys/signer.csr \
     -CA keys/root.crt -CAkey keys/root.key -CAcreateserial \
-    -out keys/signer.crt -days 365
+    -out keys/signer.crt -days 365 \
+    -extfile <(printf "basicConstraints=CA:FALSE\nkeyUsage=digitalSignature")
