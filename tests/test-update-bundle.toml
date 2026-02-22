@@ -4,6 +4,21 @@ ssh = { private-key = "./keys/id_rsa" }
 
 [[steps]]
 action = "run"
+description = "check that installation fails without --insecure-skip-bundle-verification"
+stdin-file = "./build/customized-arm64/system.rugixb"
+script = """
+#!/bin/bash
+set -euo pipefail
+if rugix-ctrl update install --reboot no -; then
+    echo "ERROR: Installation succeeded without bundle verification!"
+    exit 1
+else
+    echo "SUCCESS: Installation failed as expected without bundle verification."
+fi
+"""
+
+[[steps]]
+action = "run"
 description = "check system state prior to update"
 script = """
 #!/bin/bash
@@ -21,7 +36,7 @@ may-disconnect = true
 script = """
 #!/bin/bash
 set -euo pipefail
-rugix-ctrl update install -
+rugix-ctrl update install --insecure-skip-bundle-verification -
 """
 
 [[steps]]
@@ -50,7 +65,7 @@ may-disconnect = true
 script = """
 #!/bin/bash
 set -euo pipefail
-rugix-ctrl update install -
+rugix-ctrl update install --insecure-skip-bundle-verification -
 """
 
 [[steps]]
@@ -79,7 +94,7 @@ may-disconnect = true
 script = """
 #!/bin/bash
 set -euo pipefail
-rugix-ctrl update install -
+rugix-ctrl update install --insecure-skip-bundle-verification -
 """
 
 [[steps]]

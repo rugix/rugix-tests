@@ -21,7 +21,7 @@ stdin-file = "./build/script-bundle.rugixb"
 script = """
 #!/bin/bash
 set -euo pipefail
-rugix-ctrl update install -
+rugix-ctrl update install --insecure-skip-bundle-verification -
 """
 
 [[steps]]

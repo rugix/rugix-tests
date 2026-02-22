@@ -38,7 +38,7 @@ cp /dev/stdin /var/www/html/system.rugixb
 chmod 777 /var/www/html/system.rugixb
 rx_before=$(< /sys/class/net/lo/statistics/rx_bytes)
 tx_before=$(< /sys/class/net/lo/statistics/tx_bytes)
-/usr/bin/time -v rugix-ctrl update install --reboot no http://localhost/system.rugixb
+/usr/bin/time -v rugix-ctrl update install --insecure-skip-bundle-verification --reboot no http://localhost/system.rugixb
 rx_after=$(< /sys/class/net/lo/statistics/rx_bytes)
 tx_after=$(< /sys/class/net/lo/statistics/tx_bytes)
 rx_delta=$((rx_after - rx_before))
