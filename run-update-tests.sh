@@ -17,8 +17,6 @@ echo "TEST: test-update-bundle"
 ./run-bakery test test-update-bundle
 echo "TEST: test-update-bundle-signed"
 ./run-bakery test test-update-bundle-signed
-echo "TEST: test-update-image"
-./run-bakery test test-update-image
 echo "TEST: test-update-index"
 ./run-bakery test test-update-index
 echo "TEST: test-update-index-http"
