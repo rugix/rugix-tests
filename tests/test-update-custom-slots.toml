@@ -29,7 +29,7 @@ script = """
 #!/bin/bash
 set -euo pipefail
 rugix-ctrl system info --json
-rugix-ctrl update install --reboot no -
+rugix-ctrl update install --insecure-skip-bundle-verification --reboot no -
 """
 
 [[steps]]

@@ -4,6 +4,18 @@ ssh = { private-key = "./keys/id_rsa" }
 
 [[steps]]
 action = "run"
+description = "configure root certificate"
+script = """
+#!/bin/bash
+set -euo pipefail
+cat > /etc/rugix/ctrl.toml <<'TOML'
+[signatures]
+roots = ["/etc/rugix/root.crt"]
+TOML
+"""
+
+[[steps]]
+action = "run"
 description = "check system state prior to update"
 script = """
 #!/bin/bash
@@ -19,7 +31,7 @@ stdin-file = "./build/customized-arm64-signed.rugixb"
 script = """
 #!/bin/bash
 set -euo pipefail
-if rugix-ctrl update install --reboot no --verify-signature --root-cert /etc/rugix/other-root.crt -; then
+if rugix-ctrl update install --reboot no --root-cert /etc/rugix/other-root.crt -; then
     echo "ERROR: Installation succeeded with wrong root certificate!"
     exit 1
 else
@@ -36,7 +48,7 @@ may-disconnect = true
 script = """
 #!/bin/bash
 set -euo pipefail
-rugix-ctrl update install --verify-signature --root-cert /etc/rugix/root.crt -
+rugix-ctrl update install -
 """
 
 [[steps]]
