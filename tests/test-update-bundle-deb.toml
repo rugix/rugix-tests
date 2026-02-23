@@ -1,0 +1,51 @@
+[[systems]]
+system = "customized-arm64-deb-musl"
+ssh = { private-key = "./keys/id_rsa" }
+
+[[steps]]
+action = "run"
+description = "check that rugix-ctrl was installed via deb package"
+script = """
+#!/bin/bash
+set -euo pipefail
+dpkg -s rugix-ctrl-musl
+"""
+
+[[steps]]
+action = "run"
+description = "check system state prior to update"
+script = """
+#!/bin/bash
+set -euo pipefail
+rugix-system-assert ".boot.defaultGroup" "a"
+rugix-system-assert ".boot.activeGroup" "a"
+"""
+
+[[steps]]
+action = "run"
+description = "install a system update"
+stdin-file = "./build/customized-arm64-deb-musl/system.rugixb"
+# Rebooting may cause the SSH client to disconnect while executing the script.
+may-disconnect = true
+script = """
+#!/bin/bash
+set -euo pipefail
+rugix-ctrl update install --insecure-skip-bundle-verification -
+"""
+
+[[steps]]
+action = "wait"
+duration = 10
+
+[[steps]]
+action = "run"
+description = "check whether the update has been installed"
+script = """
+#!/bin/bash
+set -euo pipefail
+rugix-system-assert ".boot.defaultGroup" "a"
+rugix-system-assert ".boot.activeGroup" "b"
+rugix-ctrl system commit
+rugix-system-assert ".boot.defaultGroup" "b"
+rugix-system-assert ".boot.activeGroup" "b"
+"""

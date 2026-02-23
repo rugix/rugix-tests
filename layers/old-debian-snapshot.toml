@@ -13,5 +13,8 @@ recipes = [
 suite = "bookworm"
 snapshot = "20240825T145253Z"
 
+[parameters."core/rugix-ctrl"]
+source = "container"
+
 [parameters."core/set-hostname"]
 hostname = "rugix"

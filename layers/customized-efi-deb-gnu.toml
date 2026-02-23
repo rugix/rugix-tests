@@ -20,7 +20,7 @@ recipes = [
 ]
 
 [parameters."core/rugix-ctrl"]
-source = "container"
+use_musl = "false"
 
 [parameters."core/set-hostname"]
 hostname = "rugix-template"

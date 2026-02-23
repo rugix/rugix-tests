@@ -19,9 +19,6 @@ recipes = [
     "copy-boot",
 ]
 
-[parameters."core/rugix-ctrl"]
-source = "container"
-
 [parameters."core/set-hostname"]
 hostname = "rugix-template"
 

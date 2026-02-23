@@ -11,5 +11,8 @@ recipes = [
 [parameters."core/set-hostname"]
 hostname = "rugix-tests"
 
+[parameters."core/rugix-ctrl"]
+source = "container"
+
 [parameters."core/pkg-cleanup"]
 autoremove = true
