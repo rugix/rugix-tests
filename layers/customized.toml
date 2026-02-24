@@ -12,7 +12,7 @@ recipes = [
 hostname = "rugix-tests"
 
 [parameters."core/rugix-ctrl"]
-source = "container"
+version = "container"
 
 [parameters."core/pkg-cleanup"]
 autoremove = true
