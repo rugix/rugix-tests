@@ -10,7 +10,7 @@ rm -rf .rugix
 
 podman pull docker-daemon:"${RUGIX_BAKERY_IMAGE}"
 
-./run-bakery bake bundle customized-arm64-deb-musl --without-compression
-./run-bakery bake bundle customized-arm64-deb-gnu --without-compression
+./run-bakery bake bundle customized-arm64-deb-musl --disable-compression
+./run-bakery bake bundle customized-arm64-deb-gnu --disable-compression
 ./run-bakery test test-update-bundle-deb-gnu
 ./run-bakery test test-update-bundle-deb

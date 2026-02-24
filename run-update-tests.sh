@@ -8,8 +8,8 @@ mkdir build
 
 export RUGIX_DEV=true
 
-./run-bakery bake bundle customized-arm64 --without-compression
-./run-bakery bake bundle customized-arm64-delta --without-compression
+./run-bakery bake bundle customized-arm64 --disable-compression
+./run-bakery bake bundle customized-arm64-delta --disable-compression
 ./run-bakery bundler delta build/customized-arm64/system.rugixb build/customized-arm64-delta/system.rugixb build/delta.rugixb
 ./run-bakery bundler signatures sign build/customized-arm64/system.rugixb keys/signer.crt keys/signer.key build/customized-arm64-signed.rugixb
 
