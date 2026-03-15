@@ -78,6 +78,11 @@ architecture = "arm64"
 target = "generic-grub-efi"
 size = "16G"
 
+[systems.customized-arm64-docker]
+layer = "customized-efi-docker"
+architecture = "arm64"
+target = "generic-grub-efi"
+
 [systems.customized-arm64-deb-musl]
 layer = "customized-efi-deb"
 architecture = "arm64"

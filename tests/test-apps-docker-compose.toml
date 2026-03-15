@@ -1,0 +1,139 @@
+[[systems]]
+system = "customized-arm64-docker"
+ssh = { private-key = "./keys/id_rsa" }
+
+[[steps]]
+action = "run"
+description = "verify docker is available"
+script = """
+#!/bin/bash
+set -euo pipefail
+docker --version
+docker compose version
+"""
+
+[[steps]]
+action = "run"
+description = "verify no apps are installed"
+script = """
+#!/bin/bash
+set -euo pipefail
+OUTPUT=$(rugix-ctrl apps list)
+echo "$OUTPUT"
+# Should be an empty apps map.
+echo "$OUTPUT" | jq -e '.apps | length == 0'
+"""
+
+[[steps]]
+action = "run"
+description = "install the docker compose app bundle"
+stdin-file = "./apps/docker-compose-example/app-bundle-arm64.rugixb"
+script = """
+#!/bin/bash
+set -euo pipefail
+cat /dev/stdin > /root/app-bundle.rugixb
+rugix-ctrl apps install --insecure-skip-bundle-verification /root/app-bundle.rugixb
+"""
+
+[[steps]]
+action = "wait"
+duration = 5
+
+[[steps]]
+action = "run"
+description = "verify the app is listed and running"
+script = """
+#!/bin/bash
+set -euo pipefail
+OUTPUT=$(rugix-ctrl apps list)
+echo "$OUTPUT"
+echo "$OUTPUT" | jq -e '.apps.website'
+echo "$OUTPUT" | jq -e '.apps.website.status == "running"'
+echo "$OUTPUT" | jq -e '.apps.website.generation == 1'
+"""
+
+[[steps]]
+action = "run"
+description = "verify the website is reachable"
+script = """
+#!/bin/bash
+set -euo pipefail
+# Give Nginx a moment to start.
+sleep 2
+BODY=$(curl -sf http://localhost:8080/)
+echo "$BODY"
+echo "$BODY" | grep -q "Hello from Rugix Apps"
+"""
+
+[[steps]]
+action = "run"
+description = "verify app info output"
+script = """
+#!/bin/bash
+set -euo pipefail
+OUTPUT=$(rugix-ctrl apps info website)
+echo "$OUTPUT"
+echo "$OUTPUT" | jq -e '.name == "website"'
+echo "$OUTPUT" | jq -e '.state.state == "active"'
+echo "$OUTPUT" | jq -e '.state.generation == 1'
+echo "$OUTPUT" | jq -e '.generations | length == 1'
+echo "$OUTPUT" | jq -e '.generations[0].current == true'
+echo "$OUTPUT" | jq -e '.generations[0].complete == true'
+echo "$OUTPUT" | jq -e '.generations[0].lastActivated != null'
+"""
+
+[[steps]]
+action = "run"
+description = "deactivate the app"
+script = """
+#!/bin/bash
+set -euo pipefail
+rugix-ctrl apps deactivate website
+"""
+
+[[steps]]
+action = "run"
+description = "verify the app is inactive"
+script = """
+#!/bin/bash
+set -euo pipefail
+OUTPUT=$(rugix-ctrl apps list)
+echo "$OUTPUT"
+echo "$OUTPUT" | jq -e '.apps.website.status == "stopped"'
+echo "$OUTPUT" | jq -e '.apps.website.generation == null'
+"""
+
+[[steps]]
+action = "run"
+description = "re-activate the app"
+script = """
+#!/bin/bash
+set -euo pipefail
+rugix-ctrl apps activate website 1
+"""
+
+[[steps]]
+action = "wait"
+duration = 3
+
+[[steps]]
+action = "run"
+description = "verify the website is reachable again"
+script = """
+#!/bin/bash
+set -euo pipefail
+BODY=$(curl -sf http://localhost:8080/)
+echo "$BODY" | grep -q "Hello from Rugix Apps"
+"""
+
+[[steps]]
+action = "run"
+description = "remove the app"
+script = """
+#!/bin/bash
+set -euo pipefail
+rugix-ctrl apps remove website
+OUTPUT=$(rugix-ctrl apps list)
+echo "$OUTPUT"
+echo "$OUTPUT" | jq -e '.apps | length == 0'
+"""
