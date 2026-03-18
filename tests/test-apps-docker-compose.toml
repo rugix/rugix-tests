@@ -21,7 +21,7 @@ set -euo pipefail
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
 # Should be an empty apps map.
-echo "$OUTPUT" | jq -e '.apps | length == 0'
+echo "$OUTPUT" | jq -e 'length == 0'
 """
 
 [[steps]]
@@ -47,9 +47,9 @@ script = """
 set -euo pipefail
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
-echo "$OUTPUT" | jq -e '.apps.website'
-echo "$OUTPUT" | jq -e '.apps.website.status == "running"'
-echo "$OUTPUT" | jq -e '.apps.website.generation == 1'
+echo "$OUTPUT" | jq -e '.website'
+echo "$OUTPUT" | jq -e '.website.status == "running"'
+echo "$OUTPUT" | jq -e '.website.generation == 1'
 """
 
 [[steps]]
@@ -99,8 +99,8 @@ script = """
 set -euo pipefail
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
-echo "$OUTPUT" | jq -e '.apps.website.status == "stopped"'
-echo "$OUTPUT" | jq -e '.apps.website.generation == null'
+echo "$OUTPUT" | jq -e '.website.status == "stopped"'
+echo "$OUTPUT" | jq -e '.website.generation == null'
 """
 
 [[steps]]
@@ -135,5 +135,5 @@ set -euo pipefail
 rugix-ctrl apps remove website
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
-echo "$OUTPUT" | jq -e '.apps | length == 0'
+echo "$OUTPUT" | jq -e 'length == 0'
 """
