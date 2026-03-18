@@ -60,6 +60,13 @@ script = """
 set -euo pipefail
 # Give Nginx a moment to start.
 sleep 2
+echo "--- docker compose ps ---"
+docker compose --project-name website ps
+echo "--- docker compose logs ---"
+docker compose --project-name website logs
+echo "--- curl ---"
+BODY=$(curl -sv http://localhost:8080/ 2>&1) || true
+echo "$BODY"
 BODY=$(curl -sf http://localhost:8080/)
 echo "$BODY"
 echo "$BODY" | grep -q "Hello from Rugix Apps"
