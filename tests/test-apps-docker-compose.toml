@@ -60,6 +60,8 @@ script = """
 set -euo pipefail
 # Give Nginx a moment to start.
 sleep 2
+echo "--- generation directory ---"
+ls -laR /run/rugix/state/apps/website/generations/1/
 echo "--- docker compose ps ---"
 docker compose --project-name website ps
 echo "--- docker compose logs ---"
