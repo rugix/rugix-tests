@@ -8,10 +8,10 @@ mkdir build
 
 export RUGIX_DEV=true
 
-./run-bakery bake bundle customized-arm64 --disable-compression
-./run-bakery bake bundle customized-arm64-delta --disable-compression
-./run-bakery bundler delta build/customized-arm64/system.rugixb build/customized-arm64-delta/system.rugixb build/delta.rugixb
-./run-bakery bundler signatures sign build/customized-arm64/system.rugixb keys/signer.crt keys/signer.key build/customized-arm64-signed.rugixb
+./run-bakery bake bundle customized-amd64 --disable-compression
+./run-bakery bake bundle customized-amd64-delta --disable-compression
+./run-bakery bundler delta build/customized-amd64/system.rugixb build/customized-amd64-delta/system.rugixb build/delta.rugixb
+./run-bakery bundler signatures sign build/customized-amd64/system.rugixb keys/signer.crt keys/signer.key build/customized-amd64-signed.rugixb
 
 echo "TEST: test-update-bundle"
 ./run-bakery test test-update-bundle

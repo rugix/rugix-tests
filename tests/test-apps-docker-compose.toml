@@ -1,5 +1,5 @@
 [[systems]]
-system = "customized-arm64-docker"
+system = "customized-amd64-docker"
 ssh = { private-key = "./keys/id_rsa" }
 
 [[steps]]
@@ -27,7 +27,7 @@ echo "$OUTPUT" | jq -e '.apps | length == 0'
 [[steps]]
 action = "run"
 description = "install the docker compose app bundle"
-stdin-file = "./apps/docker-compose-example/app-bundle-arm64.rugixb"
+stdin-file = "./apps/docker-compose-example/app-bundle-amd64.rugixb"
 script = """
 #!/bin/bash
 set -euo pipefail

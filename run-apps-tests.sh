@@ -9,7 +9,7 @@ mkdir build
 export RUGIX_DEV=true
 
 # Build the system image with Docker support.
-./run-bakery bake image customized-arm64-docker
+./run-bakery bake image customized-amd64-docker
 
 # Build the Docker Compose app bundle.
 rugix-bundler apps pack docker-compose \

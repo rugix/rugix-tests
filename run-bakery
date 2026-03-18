@@ -29,7 +29,7 @@ RUGIX_CACHE_VOLUME=${RUGIX_CACHE_VOLUME:-"rugix-build-cache"}
 RUGIX_BINARIES_DIR=${RUGIX_BINARIES_DIR:-""}
 
 if [ "${RUGIX_DEV}" = "false" ]; then
-    RUGIX_VERSION=${RUGIX_VERSION:-"v0.8"}
+    RUGIX_VERSION=${RUGIX_VERSION:-"v0.9"}
 else
     RUGIX_VERSION=${RUGIX_VERSION:-"dev"}
 fi
@@ -65,12 +65,16 @@ if [ "${1:-}" == "run" ]; then
 fi
 
 PRIVILEGED_FLAG=""
+KVM_FLAG=""
 if [ "${RUGIX_PRIVILEGED}" = "true" ]; then
     PRIVILEGED_FLAG="--privileged"
+elif [ -e /dev/kvm ]; then
+    KVM_FLAG="--device /dev/kvm"
 fi
 
 exec $DOCKER run --rm \
     $PRIVILEGED_FLAG \
+    $KVM_FLAG \
     $DOCKER_FLAGS \
     -v "$(pwd)":/project \
     -v "$(pwd)/${RUGIX_CONTEXT_DIR}":/run/rugix/bakery/context \

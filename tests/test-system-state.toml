@@ -1,5 +1,5 @@
 [[systems]]
-system = "customized-arm64"
+system = "customized-amd64"
 ssh = { private-key = "./keys/id_rsa" }
 [[systems]]
 system = "customized-temp-overlay"

@@ -33,27 +33,10 @@ architecture = "amd64"
 target = "generic-grub-efi"
 size = "16G"
 
-[systems.customized-arm64]
-layer = "customized-efi"
-architecture = "arm64"
-target = "generic-grub-efi"
-
-[systems.customized-arm64-delta]
+[systems.customized-amd64-delta]
 layer = "customized-efi-delta"
-architecture = "arm64"
+architecture = "amd64"
 target = "generic-grub-efi"
-
-[systems.customized-arm64-squashfs]
-layer = "customized-efi"
-architecture = "arm64"
-target = "generic-grub-efi"
-options = { use-squashfs = { no-compression = true } }
-
-[systems.customized-arm64-delta-squashfs]
-layer = "customized-efi-delta"
-architecture = "arm64"
-target = "generic-grub-efi"
-options = { use-squashfs = { no-compression = true } }
 
 [systems.customized-amd64-squashfs]
 layer = "customized-efi"
@@ -61,39 +44,38 @@ architecture = "amd64"
 target = "generic-grub-efi"
 options = { use-squashfs = { no-compression = true } }
 
+[systems.customized-amd64-delta-squashfs]
+layer = "customized-efi-delta"
+architecture = "amd64"
+target = "generic-grub-efi"
+options = { use-squashfs = { no-compression = true } }
+
 [systems.customized-slots]
 layer = "customized-slots"
-architecture = "arm64"
+architecture = "amd64"
 target = "generic-grub-efi"
 
 [systems.customized-temp-overlay]
 layer = "customized-temp-overlay"
-architecture = "arm64"
+architecture = "amd64"
 target = "generic-grub-efi"
 
-# This image has a larger size and can be directly used with QEMU.
-[systems.customized-arm64-vm]
-layer = "customized-efi"
-architecture = "arm64"
-target = "generic-grub-efi"
-size = "16G"
-
-[systems.customized-arm64-docker]
+[systems.customized-amd64-docker]
 layer = "customized-efi-docker"
-architecture = "arm64"
+architecture = "amd64"
 target = "generic-grub-efi"
 
-[systems.customized-arm64-deb-musl]
+[systems.customized-amd64-deb-musl]
 layer = "customized-efi-deb"
-architecture = "arm64"
+architecture = "amd64"
 target = "generic-grub-efi"
 
-[systems.customized-arm64-deb-gnu]
+[systems.customized-amd64-deb-gnu]
 layer = "customized-efi-deb-gnu"
-architecture = "arm64"
+architecture = "amd64"
 target = "generic-grub-efi"
 
 [systems.old-debian-snapshot]
 layer = "old-debian-snapshot"
-architecture = "arm64"
+architecture = "amd64"
 target = "generic-grub-efi"
