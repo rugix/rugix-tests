@@ -4,14 +4,24 @@ set -euo pipefail
 
 rm -rf .rugix
 rm -rf build
+
 mkdir build
+mkdir -p apps/build
 
 export RUGIX_DEV=true
 
-./run-bakery bake bundle customized-amd64 --disable-compression
-./run-bakery bake bundle customized-amd64-delta --disable-compression
+./run-bakery bake bundle customized-amd64
+./run-bakery bake bundle customized-amd64-delta
 ./run-bakery bundler delta build/customized-amd64/system.rugixb build/customized-amd64-delta/system.rugixb build/delta.rugixb
 ./run-bakery bundler signatures sign build/customized-amd64/system.rugixb keys/signer.crt keys/signer.key build/customized-amd64-signed.rugixb
+
+./run-bakery bundler apps pack docker-compose \
+    --pull \
+    --platform linux/amd64 \
+    --app website \
+    --include "apps/docker-compose-website/www" \
+    "apps/docker-compose-website/docker-compose.yml" \
+    "apps/build/docker-compose-website_amd64.rugixb"
 
 echo "TEST: test-update-bundle"
 ./run-bakery test test-update-bundle
@@ -25,6 +35,9 @@ echo "TEST: test-update-index-multi"
 ./run-bakery test test-update-index-multi
 echo "TEST: test-update-static-delta"
 ./run-bakery test test-update-static-delta
+
+echo "TEST: test-apps-docker-compose"
+./run-bakery test test-apps-docker-compose
 
 ./run-bakery bundler bundle bundles/script-bundle build/script-bundle.rugixb
 echo "TEST: test-update-script"
