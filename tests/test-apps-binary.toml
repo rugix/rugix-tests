@@ -37,7 +37,7 @@ set -euo pipefail
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
 echo "$OUTPUT" | jq -e '.["hello-binary"]'
-echo "$OUTPUT" | jq -e '.["hello-binary"].status == "running"'
+echo "$OUTPUT" | jq -e '.["hello-binary"].status.state == "running"'
 echo "$OUTPUT" | jq -e '.["hello-binary"].generation == 1'
 """
 
@@ -94,7 +94,7 @@ script = """
 set -euo pipefail
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
-echo "$OUTPUT" | jq -e '.["hello-binary"].status == "stopped"'
+echo "$OUTPUT" | jq -e '.["hello-binary"].status.state == "stopped"'
 echo "$OUTPUT" | jq -e '.["hello-binary"].generation == null'
 """
 
@@ -128,7 +128,7 @@ script = """
 set -euo pipefail
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
-echo "$OUTPUT" | jq -e '.["hello-binary"].status == "running"'
+echo "$OUTPUT" | jq -e '.["hello-binary"].status.state == "running"'
 MARKER=$(cat /run/rugix/state/apps/hello-binary/data/running)
 [ "$MARKER" = "hello-binary" ]
 """
@@ -174,7 +174,7 @@ set -euo pipefail
 sleep 10
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
-echo "$OUTPUT" | jq -e '.["hello-binary"].status == "running"'
+echo "$OUTPUT" | jq -e '.["hello-binary"].status.state == "running"'
 echo "$OUTPUT" | jq -e '.["hello-binary"].generation == 1'
 systemctl is-active rugix-app-hello-binary.service
 MARKER=$(cat /run/rugix/state/apps/hello-binary/data/running)

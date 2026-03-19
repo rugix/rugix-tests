@@ -48,7 +48,7 @@ set -euo pipefail
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
 echo "$OUTPUT" | jq -e '.website'
-echo "$OUTPUT" | jq -e '.website.status == "running"'
+echo "$OUTPUT" | jq -e '.website.status.state == "running"'
 echo "$OUTPUT" | jq -e '.website.generation == 1'
 """
 
@@ -108,7 +108,7 @@ script = """
 set -euo pipefail
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
-echo "$OUTPUT" | jq -e '.website.status == "stopped"'
+echo "$OUTPUT" | jq -e '.website.status.state == "stopped"'
 echo "$OUTPUT" | jq -e '.website.generation == null'
 """
 
@@ -177,7 +177,7 @@ sleep 10
 docker container ls
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
-echo "$OUTPUT" | jq -e '.website.status == "running"'
+echo "$OUTPUT" | jq -e '.website.status.state == "running"'
 echo "$OUTPUT" | jq -e '.website.generation == 1'
 """
 
