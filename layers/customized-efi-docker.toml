@@ -10,6 +10,7 @@ recipes = [
     "rugix-system-assert",
     "hello-world",
     "install-docker",
+    "setup-apps-services",
 ]
 
 [parameters."core/rugix-ctrl"]

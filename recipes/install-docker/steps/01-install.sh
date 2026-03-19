@@ -9,4 +9,8 @@ mkdir -p /etc/rugix
 cat >/etc/rugix/state/docker.toml<<EOF
 [[persist]]
 directory="/var/lib/containerd"
+[[persist]]
+directory="/var/lib/docker"
 EOF
+
+systemctl enable docker

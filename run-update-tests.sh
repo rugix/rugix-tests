@@ -36,8 +36,25 @@ echo "TEST: test-update-index-multi"
 echo "TEST: test-update-static-delta"
 ./run-bakery test test-update-static-delta
 
+./run-bakery bundler apps pack binary \
+    --app hello-binary \
+    --service "apps/binary-hello/hello-server.service" \
+    "apps/binary-hello/hello-server" \
+    "apps/build/binary-hello_amd64.rugixb"
+
+./run-bakery bundler apps pack generic \
+    --app hello-generic \
+    "apps/generic-hello/orchestrator" \
+    "apps/build/generic-hello_amd64.rugixb"
+
 echo "TEST: test-apps-docker-compose"
 ./run-bakery test test-apps-docker-compose
+
+echo "TEST: test-apps-binary"
+./run-bakery test test-apps-binary
+
+echo "TEST: test-apps-generic"
+./run-bakery test test-apps-generic
 
 ./run-bakery bundler bundle bundles/script-bundle build/script-bundle.rugixb
 echo "TEST: test-update-script"

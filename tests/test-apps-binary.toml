@@ -4,30 +4,19 @@ ssh = { private-key = "./keys/id_rsa" }
 
 [[steps]]
 action = "run"
-description = "verify docker is available"
-script = """
-#!/bin/bash
-set -euo pipefail
-docker --version
-docker compose version
-"""
-
-[[steps]]
-action = "run"
 description = "verify no apps are installed"
 script = """
 #!/bin/bash
 set -euo pipefail
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
-# Should be an empty apps map.
 echo "$OUTPUT" | jq -e 'length == 0'
 """
 
 [[steps]]
 action = "run"
-description = "install the docker compose app bundle"
-stdin-file = "./apps/build/docker-compose-website_amd64.rugixb"
+description = "install the binary app bundle"
+stdin-file = "./apps/build/binary-hello_amd64.rugixb"
 script = """
 #!/bin/bash
 set -euo pipefail
@@ -37,7 +26,7 @@ rugix-ctrl apps install --insecure-skip-bundle-verification /root/app-bundle.rug
 
 [[steps]]
 action = "wait"
-duration = 5
+duration = 3
 
 [[steps]]
 action = "run"
@@ -47,31 +36,29 @@ script = """
 set -euo pipefail
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
-echo "$OUTPUT" | jq -e '.website'
-echo "$OUTPUT" | jq -e '.website.status == "running"'
-echo "$OUTPUT" | jq -e '.website.generation == 1'
+echo "$OUTPUT" | jq -e '.["hello-binary"]'
+echo "$OUTPUT" | jq -e '.["hello-binary"].status == "running"'
+echo "$OUTPUT" | jq -e '.["hello-binary"].generation == 1'
 """
 
 [[steps]]
 action = "run"
-description = "verify the website is reachable"
+description = "verify the marker file exists"
 script = """
 #!/bin/bash
 set -euo pipefail
-# Give Nginx a moment to start.
-sleep 2
-echo "--- generation directory ---"
-ls -laR /run/rugix/state/apps/website/generations/1/
-echo "--- docker compose ps ---"
-docker compose --project-name website ps
-echo "--- docker compose logs ---"
-docker compose --project-name website logs
-echo "--- curl ---"
-BODY=$(curl -sv http://localhost:8080/ 2>&1) || true
-echo "$BODY"
-BODY=$(curl -sf http://localhost:8080/)
-echo "$BODY"
-echo "$BODY" | grep -q "Hello from Rugix Apps"
+MARKER=$(cat /run/rugix/state/apps/hello-binary/data/running)
+echo "marker: $MARKER"
+[ "$MARKER" = "hello-binary" ]
+"""
+
+[[steps]]
+action = "run"
+description = "verify the systemd unit is active"
+script = """
+#!/bin/bash
+set -euo pipefail
+systemctl is-active rugix-app-hello-binary.service
 """
 
 [[steps]]
@@ -80,15 +67,14 @@ description = "verify app info output"
 script = """
 #!/bin/bash
 set -euo pipefail
-OUTPUT=$(rugix-ctrl apps info website)
+OUTPUT=$(rugix-ctrl apps info hello-binary)
 echo "$OUTPUT"
-echo "$OUTPUT" | jq -e '.name == "website"'
+echo "$OUTPUT" | jq -e '.name == "hello-binary"'
 echo "$OUTPUT" | jq -e '.state.state == "active"'
 echo "$OUTPUT" | jq -e '.state.generation == 1'
 echo "$OUTPUT" | jq -e '.generations | length == 1'
 echo "$OUTPUT" | jq -e '.generations[0].current == true'
 echo "$OUTPUT" | jq -e '.generations[0].complete == true'
-echo "$OUTPUT" | jq -e '.generations[0].lastActivated != null'
 """
 
 [[steps]]
@@ -97,7 +83,7 @@ description = "deactivate the app"
 script = """
 #!/bin/bash
 set -euo pipefail
-rugix-ctrl apps deactivate website
+rugix-ctrl apps deactivate hello-binary
 """
 
 [[steps]]
@@ -108,8 +94,17 @@ script = """
 set -euo pipefail
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
-echo "$OUTPUT" | jq -e '.website.status == "stopped"'
-echo "$OUTPUT" | jq -e '.website.generation == null'
+echo "$OUTPUT" | jq -e '.["hello-binary"].status == "stopped"'
+echo "$OUTPUT" | jq -e '.["hello-binary"].generation == null'
+"""
+
+[[steps]]
+action = "run"
+description = "verify the marker file was cleaned up"
+script = """
+#!/bin/bash
+set -euo pipefail
+! test -f /run/rugix/state/apps/hello-binary/data/running
 """
 
 [[steps]]
@@ -118,7 +113,7 @@ description = "re-activate the app"
 script = """
 #!/bin/bash
 set -euo pipefail
-rugix-ctrl apps activate website 1
+rugix-ctrl apps activate hello-binary 1
 """
 
 [[steps]]
@@ -127,12 +122,15 @@ duration = 3
 
 [[steps]]
 action = "run"
-description = "verify the website is reachable again"
+description = "verify the app is running again"
 script = """
 #!/bin/bash
 set -euo pipefail
-BODY=$(curl -sf http://localhost:8080/)
-echo "$BODY" | grep -q "Hello from Rugix Apps"
+OUTPUT=$(rugix-ctrl apps list)
+echo "$OUTPUT"
+echo "$OUTPUT" | jq -e '.["hello-binary"].status == "running"'
+MARKER=$(cat /run/rugix/state/apps/hello-binary/data/running)
+[ "$MARKER" = "hello-binary" ]
 """
 
 [[steps]]
@@ -151,19 +149,20 @@ duration = 10
 
 [[steps]]
 action = "run"
-description = "verify docker is running after reboot"
+description = "verify the unit was synced into /run after reboot"
 script = """
 #!/bin/bash
 set -euo pipefail
-# Wait for Docker to be ready.
-for i in $(seq 1 30); do
-    if docker info >/dev/null 2>&1; then
-        echo "Docker is ready after ${i}s"
-        break
-    fi
-    sleep 1
-done
-docker info
+echo "--- persisted units ---"
+ls -la /run/rugix/state/apps/hello-binary/systemd/units/ || echo "no persisted units dir"
+echo "--- runtime units ---"
+ls -la /run/systemd/system/rugix-app-hello-binary.service || echo "unit NOT in /run/systemd/system"
+echo "--- app state ---"
+cat /run/rugix/state/apps/hello-binary/.rugix/state.json || echo "no state file"
+echo "--- sync service ---"
+systemctl status rugix-app-sync.service || true
+echo "--- systemctl list-units rugix* ---"
+systemctl list-units 'rugix*' --no-pager || true
 """
 
 [[steps]]
@@ -172,23 +171,15 @@ description = "verify the app is running after reboot"
 script = """
 #!/bin/bash
 set -euo pipefail
-# Give containers time to start via Docker's restart policy.
 sleep 10
-docker container ls
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
-echo "$OUTPUT" | jq -e '.website.status == "running"'
-echo "$OUTPUT" | jq -e '.website.generation == 1'
-"""
-
-[[steps]]
-action = "run"
-description = "verify the website is reachable after reboot"
-script = """
-#!/bin/bash
-set -euo pipefail
-BODY=$(curl -sf http://localhost:8080/)
-echo "$BODY" | grep -q "Hello from Rugix Apps"
+echo "$OUTPUT" | jq -e '.["hello-binary"].status == "running"'
+echo "$OUTPUT" | jq -e '.["hello-binary"].generation == 1'
+systemctl is-active rugix-app-hello-binary.service
+MARKER=$(cat /run/rugix/state/apps/hello-binary/data/running)
+echo "marker: $MARKER"
+[ "$MARKER" = "hello-binary" ]
 """
 
 [[steps]]
@@ -197,7 +188,7 @@ description = "remove the app"
 script = """
 #!/bin/bash
 set -euo pipefail
-rugix-ctrl apps remove website
+rugix-ctrl apps remove hello-binary
 OUTPUT=$(rugix-ctrl apps list)
 echo "$OUTPUT"
 echo "$OUTPUT" | jq -e 'length == 0'

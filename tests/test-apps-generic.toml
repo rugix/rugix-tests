@@ -1,0 +1,186 @@
+[[systems]]
+system = "customized-amd64-docker"
+ssh = { private-key = "./keys/id_rsa" }
+
+[[steps]]
+action = "run"
+description = "verify no apps are installed"
+script = """
+#!/bin/bash
+set -euo pipefail
+OUTPUT=$(rugix-ctrl apps list)
+echo "$OUTPUT"
+echo "$OUTPUT" | jq -e 'length == 0'
+"""
+
+[[steps]]
+action = "run"
+description = "install the generic app bundle"
+stdin-file = "./apps/build/generic-hello_amd64.rugixb"
+script = """
+#!/bin/bash
+set -euo pipefail
+cat /dev/stdin > /root/app-bundle.rugixb
+rugix-ctrl apps install --insecure-skip-bundle-verification /root/app-bundle.rugixb
+"""
+
+[[steps]]
+action = "wait"
+duration = 3
+
+[[steps]]
+action = "run"
+description = "verify the app is listed and running"
+script = """
+#!/bin/bash
+set -euo pipefail
+OUTPUT=$(rugix-ctrl apps list)
+echo "$OUTPUT"
+echo "$OUTPUT" | jq -e '.["hello-generic"]'
+echo "$OUTPUT" | jq -e '.["hello-generic"].status == "running"'
+echo "$OUTPUT" | jq -e '.["hello-generic"].generation == 1'
+"""
+
+[[steps]]
+action = "run"
+description = "verify the marker file exists"
+script = """
+#!/bin/bash
+set -euo pipefail
+MARKER=$(cat /run/rugix/state/apps/hello-generic/data/running)
+echo "marker: $MARKER"
+[ "$MARKER" = "hello-generic" ]
+"""
+
+[[steps]]
+action = "run"
+description = "verify app info output"
+script = """
+#!/bin/bash
+set -euo pipefail
+OUTPUT=$(rugix-ctrl apps info hello-generic)
+echo "$OUTPUT"
+echo "$OUTPUT" | jq -e '.name == "hello-generic"'
+echo "$OUTPUT" | jq -e '.state.state == "active"'
+echo "$OUTPUT" | jq -e '.state.generation == 1'
+echo "$OUTPUT" | jq -e '.generations | length == 1'
+echo "$OUTPUT" | jq -e '.generations[0].current == true'
+echo "$OUTPUT" | jq -e '.generations[0].complete == true'
+"""
+
+[[steps]]
+action = "run"
+description = "deactivate the app"
+script = """
+#!/bin/bash
+set -euo pipefail
+rugix-ctrl apps deactivate hello-generic
+"""
+
+[[steps]]
+action = "run"
+description = "verify the app is inactive"
+script = """
+#!/bin/bash
+set -euo pipefail
+OUTPUT=$(rugix-ctrl apps list)
+echo "$OUTPUT"
+echo "$OUTPUT" | jq -e '.["hello-generic"].status == "stopped"'
+echo "$OUTPUT" | jq -e '.["hello-generic"].generation == null'
+"""
+
+[[steps]]
+action = "run"
+description = "verify the marker file was cleaned up"
+script = """
+#!/bin/bash
+set -euo pipefail
+! test -f /run/rugix/state/apps/hello-generic/data/running
+"""
+
+[[steps]]
+action = "run"
+description = "re-activate the app"
+script = """
+#!/bin/bash
+set -euo pipefail
+rugix-ctrl apps activate hello-generic 1
+"""
+
+[[steps]]
+action = "wait"
+duration = 3
+
+[[steps]]
+action = "run"
+description = "verify the app is running again"
+script = """
+#!/bin/bash
+set -euo pipefail
+OUTPUT=$(rugix-ctrl apps list)
+echo "$OUTPUT"
+echo "$OUTPUT" | jq -e '.["hello-generic"].status == "running"'
+MARKER=$(cat /run/rugix/state/apps/hello-generic/data/running)
+[ "$MARKER" = "hello-generic" ]
+"""
+
+[[steps]]
+action = "run"
+description = "stop the app workload"
+script = """
+#!/bin/bash
+set -euo pipefail
+rugix-ctrl apps stop hello-generic
+"""
+
+[[steps]]
+action = "run"
+description = "verify the app is stopped but still active"
+script = """
+#!/bin/bash
+set -euo pipefail
+OUTPUT=$(rugix-ctrl apps list)
+echo "$OUTPUT"
+echo "$OUTPUT" | jq -e '.["hello-generic"].status == "stopped"'
+echo "$OUTPUT" | jq -e '.["hello-generic"].generation == 1'
+! test -f /run/rugix/state/apps/hello-generic/data/running
+"""
+
+[[steps]]
+action = "run"
+description = "start the app workload"
+script = """
+#!/bin/bash
+set -euo pipefail
+rugix-ctrl apps start hello-generic
+"""
+
+[[steps]]
+action = "wait"
+duration = 3
+
+[[steps]]
+action = "run"
+description = "verify the app is running after start"
+script = """
+#!/bin/bash
+set -euo pipefail
+OUTPUT=$(rugix-ctrl apps list)
+echo "$OUTPUT"
+echo "$OUTPUT" | jq -e '.["hello-generic"].status == "running"'
+echo "$OUTPUT" | jq -e '.["hello-generic"].generation == 1'
+MARKER=$(cat /run/rugix/state/apps/hello-generic/data/running)
+[ "$MARKER" = "hello-generic" ]
+"""
+
+[[steps]]
+action = "run"
+description = "remove the app"
+script = """
+#!/bin/bash
+set -euo pipefail
+rugix-ctrl apps remove hello-generic
+OUTPUT=$(rugix-ctrl apps list)
+echo "$OUTPUT"
+echo "$OUTPUT" | jq -e 'length == 0'
+"""

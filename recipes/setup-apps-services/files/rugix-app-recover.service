@@ -1,0 +1,10 @@
+[Unit]
+Description=Recover interrupted Rugix app transitions
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=rugix-ctrl apps recover
+
+[Install]
+WantedBy=multi-user.target
