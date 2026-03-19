@@ -149,18 +149,18 @@ duration = 10
 
 [[steps]]
 action = "run"
-description = "verify the unit was synced into /run after reboot"
+description = "verify the unit was restored into /run after reboot"
 script = """
 #!/bin/bash
 set -euo pipefail
 echo "--- persisted units ---"
-ls -la /run/rugix/state/apps/hello-binary/systemd/units/ || echo "no persisted units dir"
+ls -la /run/rugix/state/apps/hello-binary/generations/1/.rugix/systemd/units/ || echo "no persisted units dir"
 echo "--- runtime units ---"
 ls -la /run/systemd/system/rugix-app-hello-binary.service || echo "unit NOT in /run/systemd/system"
 echo "--- app state ---"
 cat /run/rugix/state/apps/hello-binary/.rugix/state.json || echo "no state file"
 echo "--- sync service ---"
-systemctl status rugix-app-sync.service || true
+systemctl status rugix-apps-restore-units.service || true
 echo "--- systemctl list-units rugix* ---"
 systemctl list-units 'rugix*' --no-pager || true
 """
