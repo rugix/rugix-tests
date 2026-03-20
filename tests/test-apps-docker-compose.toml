@@ -31,8 +31,7 @@ stdin-file = "./apps/build/docker-compose-website_amd64.rugixb"
 script = """
 #!/bin/bash
 set -euo pipefail
-cat /dev/stdin > /root/app-bundle.rugixb
-rugix-ctrl apps install --insecure-skip-bundle-verification /root/app-bundle.rugixb
+rugix-ctrl apps install --insecure-skip-bundle-verification -
 """
 
 [[steps]]

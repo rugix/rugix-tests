@@ -35,9 +35,9 @@ case "$1" in
         ;;
     status)
         if [ -f "${PIDFILE}" ] && kill -0 "$(cat "${PIDFILE}")" 2>/dev/null; then
-            echo '{"status": "running"}'
+            echo '{"state": "running"}'
         else
-            echo '{"status": "stopped"}'
+            echo '{"state": "stopped"}'
         fi
         ;;
     *)
