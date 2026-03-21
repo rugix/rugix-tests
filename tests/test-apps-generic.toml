@@ -63,7 +63,7 @@ echo "$OUTPUT" | jq -e '.name == "hello-generic"'
 echo "$OUTPUT" | jq -e '.state.state == "active"'
 echo "$OUTPUT" | jq -e '.state.generation == 1'
 echo "$OUTPUT" | jq -e '.generations | length == 1'
-echo "$OUTPUT" | jq -e '.generations[0].current == true'
+echo "$OUTPUT" | jq -e '.generations[0].active == true'
 echo "$OUTPUT" | jq -e '.generations[0].complete == true'
 """
 
