@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import sys
 from collections.abc import Callable, Generator
 from functools import partial
@@ -11,6 +12,8 @@ from pathlib import Path
 from threading import Thread
 
 import pytest
+
+EXTENDED_ENV = "RUGIX_TESTS_EXTENDED"
 
 # This conftest lives at the bakery project root (next to ``rugix-bakery.toml``).
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -26,6 +29,22 @@ logger = logging.getLogger(__name__)
 
 def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line("markers", "slow: long-running tests")
+    config.addinivalue_line(
+        "markers",
+        f"extended: tests outside the default suite (run with {EXTENDED_ENV}=1)",
+    )
+
+
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
+    """Skip ``@pytest.mark.extended`` tests unless ``$RUGIX_TESTS_EXTENDED`` is set."""
+    if os.environ.get(EXTENDED_ENV):
+        return
+    skip = pytest.mark.skip(reason=f"set {EXTENDED_ENV}=1 to enable")
+    for item in items:
+        if "extended" in item.keywords:
+            item.add_marker(skip)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

@@ -23,6 +23,8 @@ mise run test     # tests only
 
 Per-test artifacts (serial console, command history) land under `test-outputs/<nodeid>/`.
 
+A few tests carry the `extended` marker (deb-package install variants, system-state persistence) and are skipped by default. Set `RUGIX_TESTS_EXTENDED=1` to run them.
+
 ## ⚖️ Licensing
 
 This project is licensed under either [MIT](https://github.com/rugix/rugix/blob/main/LICENSE-MIT) or [Apache 2.0](https://github.com/rugix/rugix/blob/main/LICENSE-APACHE) at your option.

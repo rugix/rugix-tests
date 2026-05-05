@@ -14,7 +14,7 @@ from rugix_testkit import VMHandle
 BACKUP_NAME = "test-backup"
 
 
-@pytest.mark.slow
+@pytest.mark.extended
 def test_system_state_reset_with_backup(amd64_vm: VMHandle) -> None:
     amd64_vm.run(["touch", "/var/this-file-should-not-persist"], hide=True)
     amd64_vm.run(["touch", "/run/rugix/state/this-file-should-persist"], hide=True)

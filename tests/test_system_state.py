@@ -17,7 +17,7 @@ def boot_system(request: pytest.FixtureRequest) -> str:
     return request.param
 
 
-@pytest.mark.slow
+@pytest.mark.extended
 def test_system_state_persistence(amd64_vm: VMHandle) -> None:
     amd64_vm.run(["touch", "/var/this-file-should-not-persist"], hide=True)
     amd64_vm.run(["touch", "/run/rugix/state/this-file-should-persist"], hide=True)

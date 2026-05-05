@@ -33,7 +33,7 @@ def boot_system(deb_variant: tuple[str, str]) -> str:
     return deb_variant[0]
 
 
-@pytest.mark.slow
+@pytest.mark.extended
 def test_update_bundle_deb(
     amd64_vm: VMHandle,
     rugix: RugixCtrl,
