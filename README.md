@@ -4,6 +4,24 @@ Shared integration test infrastructure for the [Rugix](https://rugix.org) projec
 
 [Rugix Ctrl](https://github.com/rugix/rugix) and [Rugix Bakery](https://github.com/rugix/rugix-bakery) live in separate repositories to enable independent release cycles. Testing Rugix Ctrl requires building complete system images to test actual updates in VMs, which is done using Rugix Bakery. To this end, this repository provides a shared test suite that both projects include as a submodule, allowing us to validate changes in both tools against a unified, comprehensive set of tests.
 
+## 🚀 Running the Tests
+
+The system tests are written in pytest on top of [`rugix-testkit`](https://github.com/rugix/rugix-testkit). Images are baked inside the `rugix-bakery` container; QEMU runs on the host.
+
+Prerequisites:
+
+- A container runtime (`podman` or `docker`) for the bake stage.
+- `mise`, which installs Python, `uv`, and `qemu`. `rugix-testkit` and the other Python dependencies are fetched on first run.
+
+```bash
+./generate-test-keys.sh
+mise install
+mise run check    # lint + typecheck + tests
+mise run test     # tests only
+```
+
+Per-test artifacts (serial console, command history) land under `test-outputs/<nodeid>/`.
+
 ## ⚖️ Licensing
 
 This project is licensed under either [MIT](https://github.com/rugix/rugix/blob/main/LICENSE-MIT) or [Apache 2.0](https://github.com/rugix/rugix/blob/main/LICENSE-APACHE) at your option.

@@ -1,0 +1,37 @@
+# Toolchain for the pytest test suite: Python + uv on the host (to drive
+# pytest), and QEMU on the host for booting baked images.
+#
+# The bake stage still runs inside the rugix-bakery container via
+# ``./run-bakery``; only test execution uses the tools declared here.
+
+[tools]
+uv = "latest"
+python = "3.11"
+"nix:qemu" = "latest"
+"nix:openssh" = "latest"
+
+[tasks.test]
+description = "Run all tests."
+run = 'uv run --group dev pytest "$@"'
+
+[tasks.typecheck]
+description = "Run mypy on the harness and tests."
+run = "uv run --group dev mypy harness/ tests/ conftest.py"
+
+[tasks.lint]
+description = "Lint and format-check the harness and tests."
+run = '''
+uv run --group dev ruff check harness/ tests/ conftest.py
+uv run --group dev ruff format --check harness/ tests/ conftest.py
+'''
+
+[tasks.fmt]
+description = "Auto-fix lint errors and format code."
+run = '''
+uv run --group dev ruff check --fix harness/ tests/ conftest.py
+uv run --group dev ruff format harness/ tests/ conftest.py
+'''
+
+[tasks.check]
+description = "Run all checks (lint, format, typecheck, test)."
+depends = ["lint", "typecheck", "test"]
