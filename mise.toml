@@ -1,13 +1,9 @@
-# Toolchain for the pytest test suite. Only ``uv`` is managed via mise here:
-# Python is taken from PATH (mise's python plugin doesn't work cleanly on
-# NixOS — both compile and precompiled paths fail), and ``qemu`` / ``openssh``
-# come from the system package manager or the runner's NixOS configuration.
-#
-# The bake stage runs inside the rugix-bakery container via ``./run-bakery``;
-# only test execution uses the tools declared here.
+# Toolchain for the pytest test suite. ``qemu`` and ``openssh`` are
+# expected on PATH; the bake stage runs inside the rugix-bakery container.
 
 [tools]
 uv = "latest"
+python = "3.11"
 
 [tasks.test]
 description = "Run all tests."
