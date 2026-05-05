@@ -32,5 +32,13 @@ uv run --group dev ruff format harness/ tests/ conftest.py
 '''
 
 [tasks.check]
-description = "Run all checks (lint, format, typecheck, test)."
-depends = ["lint", "typecheck", "test"]
+description = "Run all checks (lint, format, typecheck, test) sequentially."
+# Single ``uv sync`` up front so the parallel ``uv run`` invocations underneath
+# the individual tasks don't race on .venv setup.
+run = '''
+uv sync --group dev
+uv run ruff check harness/ tests/ conftest.py
+uv run ruff format --check harness/ tests/ conftest.py
+uv run mypy harness/ tests/ conftest.py
+uv run pytest "$@"
+'''
