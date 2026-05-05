@@ -11,8 +11,9 @@ The system tests are written in pytest on top of [`rugix-testkit`](https://githu
 Prerequisites:
 
 - A container runtime (`podman` or `docker`) for the bake stage.
+- A Python interpreter (≥ 3.11) on PATH.
 - `qemu-system-x86_64` and OVMF firmware on PATH (system packages, e.g. `qemu` from your distro or `nix-shell -p qemu`).
-- `mise`, which installs Python and `uv`. `rugix-testkit` and the other Python dependencies are fetched on first run.
+- `mise`, which installs `uv`. `rugix-testkit` and the other Python dependencies are fetched on first run.
 
 ```bash
 ./generate-test-keys.sh
