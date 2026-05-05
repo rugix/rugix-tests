@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import sys
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from functools import partial
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
@@ -71,13 +71,30 @@ def bakery(project_dir: Path) -> BakeryBuilder:
 
 @pytest.fixture(scope="session")
 def http_server(project_dir: Path) -> Generator[HTTPServer]:
-    """Serve the bakery's ``build/`` directory over HTTP for bundle downloads."""
-    handler = partial(_QuietHandler, directory=str(project_dir / "build"))
+    """Serve the project root over HTTP so VMs can fetch baked artifacts.
+
+    The QEMU user-mode network gateway (``10.0.2.2``) routes back to the
+    host, so ``http://10.0.2.2:<port>/<rel>`` from inside the VM hits this
+    server's static file tree.
+    """
+    handler = partial(_QuietHandler, directory=str(project_dir))
     server = HTTPServer(("0.0.0.0", 0), handler)
     Thread(target=server.serve_forever, daemon=True).start()
     logger.info("HTTP server on port %d", server.server_port)
     yield server
     server.shutdown()
+
+
+@pytest.fixture
+def bundle_url(http_server: HTTPServer) -> Callable[[Path], str]:
+    """Return a function that converts a path under the project to a VM-side URL."""
+    base = f"http://10.0.2.2:{http_server.server_port}"
+
+    def _url(path: Path) -> str:
+        rel = path.resolve().relative_to(PROJECT_DIR)
+        return f"{base}/{rel}"
+
+    return _url
 
 
 @pytest.fixture
@@ -134,20 +151,23 @@ def assert_boot(rugix: RugixCtrl, *, default: str, active: str) -> SystemInfo:
 
 def install_and_reboot(
     rugix: RugixCtrl,
-    bundle: Path,
+    source: str,
     *,
     verify: bool = False,
     root_cert: str | None = None,
 ) -> None:
-    """Upload *bundle*, install with ``--reboot yes``, and reconnect SSH.
+    """Install from *source*, reboot, and reconnect SSH.
 
-    rugix-ctrl triggers the reboot itself, which closes the SSH connection
-    mid-command — the swallowed exception is expected. Pass ``verify=True``
-    for signed bundles where bundle verification should run.
+    *source* is forwarded verbatim to ``rugix-ctrl update install`` —
+    typically a URL produced by the :func:`bundle_url` fixture, but a
+    path on the VM also works. Use ``verify=True`` for signed bundles.
+
+    ``rugix-ctrl --reboot yes`` triggers the reboot itself and the SSH
+    connection drops mid-command; the swallowed exception is expected.
     """
     try:
-        rugix.update_install_file(
-            bundle,
+        rugix.update_install(
+            source,
             reboot="yes",
             insecure=not verify,
             root_cert=root_cert,

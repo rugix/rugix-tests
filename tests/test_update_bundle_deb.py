@@ -7,6 +7,9 @@ runs one A/B install + commit cycle.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from pathlib import Path
+
 import pytest
 
 from conftest import assert_boot, install_and_reboot
@@ -36,14 +39,14 @@ def test_update_bundle_deb(
     rugix: RugixCtrl,
     bakery: BakeryBuilder,
     deb_variant: tuple[str, str],
+    bundle_url: Callable[[Path], str],
 ) -> None:
     system, package_name = deb_variant
 
     amd64_vm.run(["dpkg", "-s", package_name], hide=True)
     assert_boot(rugix, default="a", active="a")
 
-    bundle = bakery.bake_bundle(system)
-    install_and_reboot(rugix, bundle)
+    install_and_reboot(rugix, bundle_url(bakery.bake_bundle(system)))
 
     assert_boot(rugix, default="a", active="b")
     rugix.system_commit()

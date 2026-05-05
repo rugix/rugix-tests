@@ -7,6 +7,7 @@ walks through the install / curl / activate / reboot / remove flow.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -14,7 +15,6 @@ import pytest
 from harness import BakeryBuilder
 from rugix_testkit import VMHandle
 
-REMOTE_BUNDLE = "/tmp/website.rugixb"
 APP_NAME = "website"
 URL = "http://localhost:8080/"
 EXPECTED_BODY = "Hello from Rugix Apps"
@@ -57,19 +57,19 @@ def website_bundle(bakery: BakeryBuilder, project_dir: Path) -> Path:
 def test_apps_docker_compose(
     amd64_vm: VMHandle,
     website_bundle: Path,
+    bundle_url: Callable[[Path], str],
 ) -> None:
     amd64_vm.run(["docker", "--version"], hide=True)
     amd64_vm.run(["docker", "compose", "version"], hide=True)
     _assert_no_apps(amd64_vm)
 
-    amd64_vm.upload(website_bundle, REMOTE_BUNDLE)
     amd64_vm.run(
         [
             "rugix-ctrl",
             "apps",
             "install",
             "--insecure-skip-bundle-verification",
-            REMOTE_BUNDLE,
+            bundle_url(website_bundle),
         ],
         timeout=600,
         hide=True,

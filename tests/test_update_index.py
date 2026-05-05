@@ -7,6 +7,9 @@ indices on both ``boot-a`` and ``system-a``.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from pathlib import Path
+
 import pytest
 
 from conftest import assert_boot, install_and_reboot
@@ -29,6 +32,7 @@ def test_update_index(
     rugix: RugixCtrl,
     bakery: BakeryBuilder,
     index_slots: tuple[str, ...],
+    bundle_url: Callable[[Path], str],
 ) -> None:
     for slot in index_slots:
         amd64_vm.run(
@@ -39,8 +43,7 @@ def test_update_index(
 
     assert_boot(rugix, default="a", active="a")
 
-    bundle = bakery.bake_bundle("customized-amd64")
-    install_and_reboot(rugix, bundle)
+    install_and_reboot(rugix, bundle_url(bakery.bake_bundle("customized-amd64")))
 
     assert_boot(rugix, default="a", active="b")
     rugix.system_commit()

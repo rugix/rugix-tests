@@ -8,6 +8,7 @@ served by a systemd unit), and walks through install → activate/deactivate
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -15,7 +16,6 @@ import pytest
 from harness import BakeryBuilder
 from rugix_testkit import VMHandle
 
-REMOTE_BUNDLE = "/tmp/binary-hello.rugixb"
 APP_NAME = "hello-binary"
 
 
@@ -54,17 +54,17 @@ def binary_app_bundle(bakery: BakeryBuilder, project_dir: Path) -> Path:
 def test_apps_binary(
     amd64_vm: VMHandle,
     binary_app_bundle: Path,
+    bundle_url: Callable[[Path], str],
 ) -> None:
     _assert_no_apps(amd64_vm)
 
-    amd64_vm.upload(binary_app_bundle, REMOTE_BUNDLE)
     amd64_vm.run(
         [
             "rugix-ctrl",
             "apps",
             "install",
             "--insecure-skip-bundle-verification",
-            REMOTE_BUNDLE,
+            bundle_url(binary_app_bundle),
         ],
         timeout=300,
         hide=True,

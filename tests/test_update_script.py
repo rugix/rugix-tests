@@ -6,6 +6,7 @@ installing it leaves the documented marker file under ``/run/rugix/state``.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -29,10 +30,11 @@ def test_update_script(
     amd64_vm: VMHandle,
     rugix: RugixCtrl,
     script_bundle: Path,
+    bundle_url: Callable[[Path], str],
 ) -> None:
     res = amd64_vm.run(["test", "-e", MARKER], check=False, hide=True)
     assert not res.ok, f"{MARKER} must not exist before install"
 
-    rugix.update_install_file(script_bundle)
+    rugix.update_install(bundle_url(script_bundle))
 
     amd64_vm.run(["test", "-e", MARKER], hide=True)

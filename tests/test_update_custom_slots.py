@@ -8,6 +8,7 @@ payloads land at the expected paths under ``/run/rugix/state``.
 from __future__ import annotations
 
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -42,6 +43,7 @@ def test_update_custom_slots(
     amd64_vm: VMHandle,
     rugix: RugixCtrl,
     slots_bundle: Path,
+    bundle_url: Callable[[Path], str],
 ) -> None:
     amd64_vm.run(["mkdir", "-p", "/run/rugix/state/app/custom-dir"], hide=True)
 
@@ -52,7 +54,7 @@ def test_update_custom_slots(
         res = amd64_vm.run(["test", "-e", path], check=False, hide=True)
         assert not res.ok, f"{path} must not exist before install"
 
-    rugix.update_install_file(slots_bundle)
+    rugix.update_install(bundle_url(slots_bundle))
 
     amd64_vm.run(["test", "-e", "/run/rugix/state/test-file"], hide=True)
     amd64_vm.run(["test", "-e", "/run/rugix/state/app/custom-dir/test-file"], hide=True)

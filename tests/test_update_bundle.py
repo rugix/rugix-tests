@@ -6,6 +6,9 @@ without ``--insecure-skip-bundle-verification``.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from pathlib import Path
+
 import pytest
 
 from conftest import assert_boot, install_and_reboot
@@ -18,12 +21,13 @@ def test_update_bundle(
     amd64_vm: VMHandle,
     rugix: RugixCtrl,
     bakery: BakeryBuilder,
+    bundle_url: Callable[[Path], str],
 ) -> None:
-    bundle = bakery.bake_bundle("customized-amd64")
+    bundle = bundle_url(bakery.bake_bundle("customized-amd64"))
 
     # Install must fail without --insecure-skip-bundle-verification.
     with pytest.raises(CmdError):
-        rugix.update_install_file(bundle, insecure=False, timeout=300)
+        rugix.update_install(bundle, insecure=False, timeout=300)
 
     assert_boot(rugix, default="a", active="a")
 

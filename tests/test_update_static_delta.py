@@ -7,6 +7,7 @@ from the base and ``customized-amd64-delta``) and commits again.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -32,17 +33,19 @@ def test_update_static_delta(
     rugix: RugixCtrl,
     bakery: BakeryBuilder,
     delta_bundle: Path,
+    bundle_url: Callable[[Path], str],
 ) -> None:
-    base_bundle = bakery.bake_bundle("customized-amd64")
+    base = bundle_url(bakery.bake_bundle("customized-amd64"))
+    delta = bundle_url(delta_bundle)
 
     assert_boot(rugix, default="a", active="a")
 
-    install_and_reboot(rugix, base_bundle)
+    install_and_reboot(rugix, base)
     assert_boot(rugix, default="a", active="b")
     rugix.system_commit()
     assert_boot(rugix, default="b", active="b")
 
-    install_and_reboot(rugix, delta_bundle)
+    install_and_reboot(rugix, delta)
     assert_boot(rugix, default="b", active="a")
     rugix.system_commit()
     assert_boot(rugix, default="a", active="a")
