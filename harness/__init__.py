@@ -6,6 +6,16 @@ runtime VM and SSH bits live in :mod:`rugix_testkit`.
 """
 
 from harness.bakery import BakedSystem, BakeryBuilder
-from harness.vm import build_amd64_vm_config
+from harness.vm import (
+    SwtpmProcess,
+    build_amd64_vm_config,
+    build_amd64_vm_config_with_tpm,
+)
 
-__all__ = ["BakedSystem", "BakeryBuilder", "build_amd64_vm_config"]
+__all__ = [
+    "BakedSystem",
+    "BakeryBuilder",
+    "SwtpmProcess",
+    "build_amd64_vm_config",
+    "build_amd64_vm_config_with_tpm",
+]

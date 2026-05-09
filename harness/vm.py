@@ -2,16 +2,23 @@
 
 The runtime VM management lives in :mod:`rugix_testkit`; this module just
 encodes how rugix-bakery's amd64 images expect to be booted (q35 + OVMF
-pflash + virtio drive overlay).
+pflash + virtio drive overlay), plus optional swtpm-emulated TPM 2.0
+support for testing the TPM-backed data partition driver.
 """
 
 from __future__ import annotations
 
+import logging
 import os
 import shutil
+import subprocess
+import tempfile
+import time
 from pathlib import Path
 
 from rugix_testkit import Drive, Pflash, VMConfig
+
+logger = logging.getLogger(__name__)
 
 
 def build_amd64_vm_config(image: Path, *, disk_size: str = "40G") -> VMConfig:
@@ -100,3 +107,123 @@ def _resolve_ovmf(
     raise FileNotFoundError(
         f"Could not locate OVMF {kind} firmware. Set {env} to the file path."
     )
+
+
+class SwtpmProcess:
+    """An ephemeral swtpm 2.0 process, exposing a Unix socket for QEMU.
+
+    Used as a context manager so the TPM is torn down with the VM. The
+    state directory is created under a tempdir and cleaned up on exit.
+    """
+
+    def __init__(self, *, swtpm_binary: str = "swtpm") -> None:
+        self.swtpm_binary = shutil.which(swtpm_binary) or os.environ.get(
+            "RUGIX_SWTPM_BINARY", swtpm_binary
+        )
+        self._tmpdir: tempfile.TemporaryDirectory[str] | None = None
+        self._process: subprocess.Popen[bytes] | None = None
+        self._state_dir: Path | None = None
+        self._socket_path: Path | None = None
+
+    @property
+    def socket_path(self) -> Path:
+        assert self._socket_path is not None, "SwtpmProcess not started"
+        return self._socket_path
+
+    def __enter__(self) -> SwtpmProcess:
+        self._tmpdir = tempfile.TemporaryDirectory(prefix="rugix-swtpm-")
+        root = Path(self._tmpdir.name)
+        self._state_dir = root / "state"
+        self._state_dir.mkdir()
+        self._socket_path = root / "ctrl.sock"
+
+        # Provision an empty TPM 2.0 state. We deliberately skip
+        # `--create-ek-cert` / `--create-platform-cert` here: those invoke
+        # swtpm_localca, which needs a system-level writable statedir that
+        # rootless setups can't provide. systemd-cryptenroll seals directly
+        # to TPM key material without consulting EK certs, so the test runs
+        # fine without a cert chain.
+        setup_binary = (
+            shutil.which("swtpm_setup") if self.swtpm_binary else None
+        ) or "swtpm_setup"
+        subprocess.run(
+            [
+                setup_binary,
+                "--tpm2",
+                "--tpm-state",
+                str(self._state_dir),
+            ],
+            check=True,
+            capture_output=True,
+        )
+
+        # Start swtpm in socket mode. The Unix-domain control socket is what
+        # QEMU connects to via ``-chardev socket,path=...``.
+        assert self.swtpm_binary is not None
+        self._process = subprocess.Popen(
+            [
+                self.swtpm_binary,
+                "socket",
+                "--tpm2",
+                "--tpmstate",
+                f"dir={self._state_dir}",
+                "--ctrl",
+                f"type=unixio,path={self._socket_path}",
+                "--flags",
+                "startup-clear",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        # Wait for the socket to appear (swtpm creates it asynchronously).
+        deadline = time.monotonic() + 5.0
+        while time.monotonic() < deadline:
+            if self._socket_path.exists():
+                logger.info("swtpm: socket ready at %s", self._socket_path)
+                return self
+            if self._process.poll() is not None:
+                stderr = b""
+                if self._process.stderr is not None:
+                    stderr = self._process.stderr.read()
+                raise RuntimeError(
+                    f"swtpm exited before its socket appeared: {stderr!r}"
+                )
+            time.sleep(0.05)
+        raise TimeoutError("swtpm socket did not appear within 5 s")
+
+    def __exit__(self, *_exc: object) -> None:
+        if self._process is not None and self._process.poll() is None:
+            self._process.terminate()
+            try:
+                self._process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self._process.kill()
+                self._process.wait(timeout=5)
+        self._process = None
+        if self._tmpdir is not None:
+            self._tmpdir.cleanup()
+            self._tmpdir = None
+
+
+def build_amd64_vm_config_with_tpm(
+    image: Path, tpm_socket: Path, *, disk_size: str = "40G"
+) -> VMConfig:
+    """Like :func:`build_amd64_vm_config`, but with a TPM 2.0 (TIS) device.
+
+    *tpm_socket* is the Unix socket exposed by an already-running swtpm
+    instance (see :class:`SwtpmProcess`). The guest sees ``/dev/tpm0`` /
+    ``/dev/tpmrm0`` once the kernel's ``tpm_tis`` driver attaches.
+    """
+    config = build_amd64_vm_config(image, disk_size=disk_size)
+    config.extra_args.extend(
+        [
+            "-chardev",
+            f"socket,id=chrtpm,path={tpm_socket}",
+            "-tpmdev",
+            "emulator,id=tpm0,chardev=chrtpm",
+            "-device",
+            "tpm-tis,tpmdev=tpm0",
+        ]
+    )
+    return config

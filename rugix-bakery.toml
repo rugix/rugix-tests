@@ -60,6 +60,16 @@ layer = "customized-temp-overlay"
 architecture = "amd64"
 target = "generic-grub-efi"
 
+[systems.customized-amd64-luks2-passphrase]
+layer = "customized-luks2-passphrase"
+architecture = "amd64"
+target = "generic-grub-efi"
+
+[systems.customized-amd64-luks2-tpm2]
+layer = "customized-luks2-tpm2"
+architecture = "amd64"
+target = "generic-grub-efi"
+
 [systems.customized-amd64-docker]
 layer = "customized-efi-docker"
 architecture = "amd64"
