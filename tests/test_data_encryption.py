@@ -14,9 +14,7 @@ def boot_system() -> str:
 
 def _data_block_device(vm: VMHandle) -> str:
     """Return the block device path backing ``/run/rugix/mounts/data``."""
-    res = vm.run(
-        ["findmnt", "-no", "SOURCE", "/run/rugix/mounts/data"], hide=True
-    )
+    res = vm.run(["findmnt", "-no", "SOURCE", "/run/rugix/mounts/data"], hide=True)
     return res.stdout.strip()
 
 
@@ -43,18 +41,14 @@ def test_data_partition_is_luks_encrypted(amd64_vm: VMHandle) -> None:
         for line in status.splitlines()
         if line.strip().startswith("device:")
     )
-    is_luks = amd64_vm.run(
-        ["cryptsetup", "isLuks", backing], check=False, hide=True
-    )
+    is_luks = amd64_vm.run(["cryptsetup", "isLuks", backing], check=False, hide=True)
     assert is_luks.ok, f"{backing} should report as LUKS, got rc={is_luks.return_code}"
 
 
 def test_persistence_across_reboot(amd64_vm: VMHandle) -> None:
     """State survives a reboot — proving the LUKS volume re-opens
     correctly, not just on the bootstrap boot."""
-    amd64_vm.run(
-        ["touch", "/run/rugix/state/encrypted-persistence-marker"], hide=True
-    )
+    amd64_vm.run(["touch", "/run/rugix/state/encrypted-persistence-marker"], hide=True)
 
     try:
         amd64_vm.run(["reboot"], check=False, hide=True)
@@ -74,16 +68,12 @@ def test_persistence_across_reboot(amd64_vm: VMHandle) -> None:
 def test_data_wipe_destroys_state_and_reformats(amd64_vm: VMHandle) -> None:
     """``rugix-ctrl data wipe`` should cryptographically erase the LUKS
     header, reformat with a fresh master key, and clear all state."""
-    amd64_vm.run(
-        ["touch", "/run/rugix/state/should-not-survive-wipe"], hide=True
-    )
+    amd64_vm.run(["touch", "/run/rugix/state/should-not-survive-wipe"], hide=True)
     pre_wipe_uuid = _luks_uuid(amd64_vm, "/dev/vda6")
     assert pre_wipe_uuid, "couldn't read pre-wipe LUKS UUID"
 
     try:
-        amd64_vm.run(
-            ["rugix-ctrl", "data", "wipe", "--yes"], check=False, hide=True
-        )
+        amd64_vm.run(["rugix-ctrl", "data", "wipe", "--yes"], check=False, hide=True)
     except Exception:
         pass
     amd64_vm.wait_for_reboot()
@@ -111,9 +101,7 @@ def test_data_wipe_destroys_state_and_reformats(amd64_vm: VMHandle) -> None:
 def test_state_reset_clears_profile_only(amd64_vm: VMHandle) -> None:
     """``state reset`` should clear the active profile but leave the LUKS
     volume intact."""
-    amd64_vm.run(
-        ["touch", "/run/rugix/state/should-not-survive-reset"], hide=True
-    )
+    amd64_vm.run(["touch", "/run/rugix/state/should-not-survive-reset"], hide=True)
 
     try:
         amd64_vm.run(["rugix-ctrl", "state", "reset"], check=False, hide=True)

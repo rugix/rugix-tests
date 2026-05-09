@@ -44,9 +44,7 @@ def amd64_tpm_vm(
 
 
 def _data_block_device(vm: VMHandle) -> str:
-    res = vm.run(
-        ["findmnt", "-no", "SOURCE", "/run/rugix/mounts/data"], hide=True
-    )
+    res = vm.run(["findmnt", "-no", "SOURCE", "/run/rugix/mounts/data"], hide=True)
     return res.stdout.strip()
 
 
@@ -69,9 +67,7 @@ def _luks_uuid(vm: VMHandle, device: str) -> str:
 def test_tpm_device_is_present(amd64_tpm_vm: VMHandle) -> None:
     res = amd64_tpm_vm.run(["test", "-c", "/dev/tpm0"], hide=True, check=False)
     assert res.ok, "guest should expose /dev/tpm0 from the emulated TPM"
-    pcrs = amd64_tpm_vm.run(
-        ["tpm2_pcrread", "sha256:0,7"], hide=True, check=False
-    )
+    pcrs = amd64_tpm_vm.run(["tpm2_pcrread", "sha256:0,7"], hide=True, check=False)
     assert pcrs.ok, f"tpm2_pcrread failed: {pcrs.stderr or pcrs.stdout}"
 
 
@@ -86,9 +82,7 @@ def test_data_partition_is_tpm_backed(amd64_tpm_vm: VMHandle) -> None:
     # luksDump succeeds only on a LUKS volume, so its output is a
     # sufficient witness that the backing device is LUKS-formatted.
     backing = _backing_device(amd64_tpm_vm, mapper_path)
-    dump = amd64_tpm_vm.run(
-        ["cryptsetup", "luksDump", backing], hide=True
-    ).stdout
+    dump = amd64_tpm_vm.run(["cryptsetup", "luksDump", backing], hide=True).stdout
     assert "systemd-tpm2" in dump, (
         f"LUKS header should carry a systemd-tpm2 token:\n{dump}"
     )
@@ -96,9 +90,7 @@ def test_data_partition_is_tpm_backed(amd64_tpm_vm: VMHandle) -> None:
 
 def test_persistence_across_reboot(amd64_tpm_vm: VMHandle) -> None:
     """State survives a reboot — the TPM unseal works on every boot."""
-    amd64_tpm_vm.run(
-        ["touch", "/run/rugix/state/tpm-persistence-marker"], hide=True
-    )
+    amd64_tpm_vm.run(["touch", "/run/rugix/state/tpm-persistence-marker"], hide=True)
 
     try:
         amd64_tpm_vm.run(["reboot"], check=False, hide=True)
@@ -118,9 +110,7 @@ def test_persistence_across_reboot(amd64_tpm_vm: VMHandle) -> None:
 def test_data_wipe_rotates_tpm_enrollment(amd64_tpm_vm: VMHandle) -> None:
     """``rugix-ctrl data wipe`` erases the LUKS header, reformats, and
     re-enrolls the TPM with a fresh sealed key."""
-    amd64_tpm_vm.run(
-        ["touch", "/run/rugix/state/should-not-survive-wipe"], hide=True
-    )
+    amd64_tpm_vm.run(["touch", "/run/rugix/state/should-not-survive-wipe"], hide=True)
     pre_wipe_uuid = _luks_uuid(amd64_tpm_vm, "/dev/vda6")
     assert pre_wipe_uuid, "couldn't read pre-wipe LUKS UUID"
 
@@ -146,9 +136,7 @@ def test_data_wipe_rotates_tpm_enrollment(amd64_tpm_vm: VMHandle) -> None:
         f"is still {post_wipe_uuid!r})"
     )
 
-    dump = amd64_tpm_vm.run(
-        ["cryptsetup", "luksDump", "/dev/vda6"], hide=True
-    ).stdout
+    dump = amd64_tpm_vm.run(["cryptsetup", "luksDump", "/dev/vda6"], hide=True).stdout
     assert "systemd-tpm2" in dump, (
         f"post-wipe LUKS header should carry a systemd-tpm2 token:\n{dump}"
     )
@@ -173,16 +161,12 @@ def test_encryption_survives_update(
     initial_mapper = _data_block_device(amd64_tpm_vm)
     assert initial_mapper.startswith("/dev/mapper/"), initial_mapper
 
-    amd64_tpm_vm.run(
-        ["touch", "/run/rugix/state/tpm-update-marker"], hide=True
-    )
+    amd64_tpm_vm.run(["touch", "/run/rugix/state/tpm-update-marker"], hide=True)
 
     bundle = bundle_url(bakery.bake_bundle("customized-amd64-luks2-tpm2"))
     install_and_reboot(rugix, bundle)
 
-    amd64_tpm_vm.run(
-        ["test", "-e", "/run/rugix/state/tpm-update-marker"], hide=True
-    )
+    amd64_tpm_vm.run(["test", "-e", "/run/rugix/state/tpm-update-marker"], hide=True)
     post_update_mapper = _data_block_device(amd64_tpm_vm)
     assert post_update_mapper.startswith("/dev/mapper/"), (
         f"data partition mapper missing after update, got {post_update_mapper!r}"
