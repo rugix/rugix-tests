@@ -60,6 +60,11 @@ layer = "customized-temp-overlay"
 architecture = "amd64"
 target = "generic-grub-efi"
 
+[systems.customized-overlay-fallback]
+layer = "customized-overlay-fallback"
+architecture = "amd64"
+target = "generic-grub-efi"
+
 [systems.customized-amd64-luks2-passphrase]
 layer = "customized-luks2-passphrase"
 architecture = "amd64"
