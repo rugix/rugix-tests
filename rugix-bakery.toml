@@ -85,6 +85,16 @@ layer = "customized-efi-deb-gnu"
 architecture = "amd64"
 target = "generic-grub-efi"
 
+[systems.init-error-shell-disabled]
+layer = "init-error-shell-disabled"
+architecture = "amd64"
+target = "generic-grub-efi"
+
+[systems.init-error-shell-enabled]
+layer = "init-error-shell-enabled"
+architecture = "amd64"
+target = "generic-grub-efi"
+
 [systems.old-debian-snapshot]
 layer = "old-debian-snapshot"
 architecture = "amd64"

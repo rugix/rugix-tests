@@ -25,6 +25,8 @@ Per-test artifacts (serial console, command history) land under `test-outputs/<n
 
 A few tests carry the `extended` marker (deb-package install variants, system-state persistence) and are skipped by default. Set `RUGIX_TESTS_EXTENDED=1` to run them.
 
+The pytest entrypoint automatically exports `RUGIX_BINARIES_DIR=../build/binaries` when that directory exists and the variable is not already set. `run-bakery` then bind-mounts those binaries into the Bakery container, which lets Rugix CI test freshly built Rugix binaries while Bakery CI can continue testing the binaries embedded in its own image.
+
 ## ⚖️ Licensing
 
 This project is licensed under either [MIT](https://github.com/rugix/rugix/blob/main/LICENSE-MIT) or [Apache 2.0](https://github.com/rugix/rugix/blob/main/LICENSE-APACHE) at your option.

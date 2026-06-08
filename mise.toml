@@ -7,7 +7,7 @@ python = "3.11"
 
 [tasks.test]
 description = "Run all tests."
-run = 'uv run --group dev pytest "$@"'
+run = './scripts/run-pytest.sh "$@"'
 
 [tasks.typecheck]
 description = "Run mypy on the harness and tests."
@@ -36,5 +36,5 @@ uv sync --group dev
 uv run ruff check harness/ tests/ conftest.py
 uv run ruff format --check harness/ tests/ conftest.py
 uv run mypy harness/ tests/ conftest.py
-uv run pytest "$@"
+./scripts/run-pytest.sh "$@"
 '''
