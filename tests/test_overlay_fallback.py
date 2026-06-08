@@ -26,4 +26,4 @@ def test_overlay_falls_back_to_in_memory(amd64_vm: VMHandle) -> None:
     assert "unable to setup system overlay mounts" in log
 
     info = amd64_vm.run_json(["rugix-ctrl", "system", "info", "--json"])
-    assert info["state"]["status"] == "error"
+    assert info["state"]["status"] == "Error"
