@@ -109,7 +109,7 @@ def test_rauc_grub_update_state_transitions(
     assert boot["defaultGroup"] == "a"
 
     bundle = bundle_url(bakery.bake_bundle("customized-amd64"))
-    _ctrl(
+    result = _ctrl(
         amd64_vm,
         [
             "update",
@@ -120,7 +120,9 @@ def test_rauc_grub_update_state_transitions(
             bundle,
         ],
         timeout=600,
+        check=False,
     )
+    assert result.ok, f"{result.stdout}\n{result.stderr}"
     environment = amd64_vm.run(["cat", "/tmp/rugix-fwenv"], hide=True).stdout
     assert "BOOT_ORDER=B A" in environment
     assert "B_OK=1" in environment
@@ -155,7 +157,7 @@ def test_mender_uboot_update_state_transitions(
     assert boot["defaultGroup"] == "a"
 
     bundle = bundle_url(bakery.bake_bundle("customized-amd64"))
-    _ctrl(
+    result = _ctrl(
         amd64_vm,
         [
             "update",
@@ -166,7 +168,9 @@ def test_mender_uboot_update_state_transitions(
             bundle,
         ],
         timeout=600,
+        check=False,
     )
+    assert result.ok, f"{result.stdout}\n{result.stderr}"
     environment = amd64_vm.run(["cat", "/tmp/rugix-fwenv"], hide=True).stdout
     assert "upgrade_available=1" in environment
     assert "mender_boot_part=3" in environment
@@ -174,7 +178,10 @@ def test_mender_uboot_update_state_transitions(
     # During a Mender trial, the committed pre-update group remains the default.
     assert _boot_info(amd64_vm)["defaultGroup"] == "a"
 
+    # Without a physical U-Boot reboot the VM is still running group A. Mender
+    # deliberately reports that committed group as the default during a trial,
+    # so a pre-reboot commit is a no-op and must preserve the trial variables.
     _ctrl(amd64_vm, ["system", "commit"])
     environment = amd64_vm.run(["cat", "/tmp/rugix-fwenv"], hide=True).stdout
-    assert "upgrade_available=0" in environment
-    assert "mender_boot_part=2" in environment
+    assert "upgrade_available=1" in environment
+    assert "mender_boot_part=3" in environment
