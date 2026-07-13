@@ -23,7 +23,14 @@ def test_deferred_update_reboots_into_recorded_group(
     bundle = bundle_url(bakery.bake_bundle("customized-amd64"))
     assert_boot(rugix, default="a", active="a")
 
-    rugix.update_install(bundle, reboot="deferred", insecure=True, timeout=600)
+    result = rugix.update_install(
+        bundle,
+        reboot="deferred",
+        insecure=True,
+        timeout=600,
+        check=False,
+    )
+    assert result.ok, f"{result.stdout}\n{result.stderr}"
     assert_boot(rugix, default="a", active="a")
 
     marker = amd64_vm.run(
