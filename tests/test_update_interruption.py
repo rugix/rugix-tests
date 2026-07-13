@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import assert_boot, install_and_reboot
+from conftest import assert_boot
 from harness import BakeryBuilder
 from rugix_testkit import RugixCtrl, VMHandle
 
@@ -51,7 +51,8 @@ reboot -f
     ).ok
 
     # Reinstalling overwrites the inactive destination and completes normally.
-    install_and_reboot(rugix, bundle)
+    rugix.update_install(bundle, reboot="set", insecure=True, timeout=600)
+    amd64_vm.reboot(timeout=600)
     assert_boot(rugix, default="a", active="b")
     rugix.system_commit()
     assert_boot(rugix, default="b", active="b")
