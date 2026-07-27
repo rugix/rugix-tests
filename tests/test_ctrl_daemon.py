@@ -55,17 +55,17 @@ def ctrl_daemon_vm(amd64_vm: VMHandle) -> VMHandle:
             "sh",
             "-c",
             (
-                "getent group rugix-admin >/dev/null || "
-                "groupadd --system rugix-admin; "
+                "getent group rugix-daemon >/dev/null || "
+                "groupadd --system rugix-daemon; "
                 "id rugix-admin >/dev/null 2>&1 || "
-                "useradd --system --gid rugix-admin --no-create-home rugix-admin; "
+                "useradd --system --gid rugix-daemon --no-create-home rugix-admin; "
                 "rugix-ctrl daemon >/tmp/rugix-ctrl-daemon.log 2>&1 & "
                 "echo $! >/tmp/rugix-ctrl-daemon.pid; "
                 "for attempt in $(seq 1 100); do "
                 "[ -S /run/rugix/ctrl.sock ] && break; sleep 0.1; "
                 "done; "
                 "test -S /run/rugix/ctrl.sock; "
-                "chgrp rugix-admin /run/rugix/ctrl.sock"
+                "chgrp rugix-daemon /run/rugix/ctrl.sock"
             ),
         ],
         hide=True,
