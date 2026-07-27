@@ -121,6 +121,28 @@ def test_ctrl_daemon_update_installation(
 def test_ctrl_daemon_query_and_admission_policy(
     ctrl_daemon_vm: VMHandle,
 ) -> None:
+    daemon_info = ctrl_daemon_vm.run_json(
+        [
+            "runuser",
+            "-u",
+            "rugix-admin",
+            "--",
+            "rugix-ctrl",
+            "daemon",
+            "info",
+            "--json",
+        ]
+    )
+    assert daemon_info == {
+        "dangerouslyInsecure": False,
+        "features": {
+            "factoryReset": False,
+            "systemCommit": False,
+            "systemReboot": False,
+            "appLifecycle": False,
+        },
+    }
+
     info = ctrl_daemon_vm.run_json(
         [
             "runuser",
