@@ -2,9 +2,13 @@
 
 Shared integration test infrastructure for the [Rugix](https://rugix.org) project.
 
+> [!NOTE]
+> **Support:** This is internal test infrastructure. It is not intended for
+> general use, and its interfaces may change without notice.
+
 [Rugix Ctrl](https://github.com/rugix/rugix) and [Rugix Bakery](https://github.com/rugix/rugix-bakery) live in separate repositories to enable independent release cycles. Testing Rugix Ctrl requires building complete system images to test actual updates in VMs, which is done using Rugix Bakery. To this end, this repository provides a shared test suite that both projects include as a submodule, allowing us to validate changes in both tools against a unified, comprehensive set of tests.
 
-## 🚀 Running the Tests
+## Running the Tests
 
 The system tests are written in pytest on top of [`rugix-testkit`](https://github.com/rugix/rugix-testkit). Images are baked inside the `rugix-bakery` container; QEMU runs on the host.
 
@@ -27,7 +31,7 @@ A few tests carry the `extended` marker (deb-package install variants, system-st
 
 The pytest entrypoint automatically exports `RUGIX_BINARIES_DIR=../build/binaries` when that directory exists and the variable is not already set. `run-bakery` then bind-mounts those binaries into the Bakery container, which lets Rugix CI test freshly built Rugix binaries while Bakery CI can continue testing the binaries embedded in its own image.
 
-## ⚖️ Licensing
+## Licensing
 
 This project is licensed under either [MIT](https://github.com/rugix/rugix/blob/main/LICENSE-MIT) or [Apache 2.0](https://github.com/rugix/rugix/blob/main/LICENSE-APACHE) at your option.
 
