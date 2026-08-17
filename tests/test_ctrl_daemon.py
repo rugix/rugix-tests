@@ -14,11 +14,6 @@ CTRL_CONFIG = """\
 [signatures]
 roots = ["/etc/rugix/root.crt"]
 """
-
-DAEMON_CONFIG = """\
-socket-path = "/run/rugix/ctrl.sock"
-dangerously-insecure = false
-"""
 REMOTE_BUNDLE = "/tmp/rugix-ctrl-daemon-update.rugixb"
 REJECTED_BUNDLE = "/tmp/rugix-ctrl-daemon-rejected.rugixb"
 
@@ -43,9 +38,30 @@ def ctrl_daemon_vm(amd64_vm: VMHandle) -> VMHandle:
         [
             "sh",
             "-c",
+            f"cat > /etc/rugix/ctrl.toml <<'TOML'\n{CTRL_CONFIG}TOML",
+        ],
+        hide=True,
+    )
+    amd64_vm.run(
+        ["systemctl", "is-enabled", "--quiet", "rugix-ctrl-daemon.service"],
+        hide=True,
+    )
+    amd64_vm.run(
+        ["systemctl", "is-active", "--quiet", "rugix-ctrl-daemon.service"],
+        hide=True,
+    )
+    amd64_vm.run(
+        ["systemctl", "restart", "rugix-ctrl-daemon.service"],
+        hide=True,
+    )
+    amd64_vm.run(
+        [
+            "sh",
+            "-c",
             (
-                f"cat > /etc/rugix/ctrl.toml <<'TOML'\n{CTRL_CONFIG}TOML\n"
-                f"cat > /etc/rugix/daemon.toml <<'TOML'\n{DAEMON_CONFIG}TOML"
+                "for attempt in $(seq 1 100); do "
+                "[ -S /run/rugix/ctrl.sock ] && exit 0; sleep 0.1; "
+                "done; exit 1"
             ),
         ],
         hide=True,
@@ -55,17 +71,9 @@ def ctrl_daemon_vm(amd64_vm: VMHandle) -> VMHandle:
             "sh",
             "-c",
             (
-                "getent group rugix-daemon >/dev/null || "
-                "groupadd --system rugix-daemon; "
+                "getent group rugix-daemon >/dev/null; "
                 "id rugix-admin >/dev/null 2>&1 || "
-                "useradd --system --gid rugix-daemon --no-create-home rugix-admin; "
-                "rugix-ctrl daemon >/tmp/rugix-ctrl-daemon.log 2>&1 & "
-                "echo $! >/tmp/rugix-ctrl-daemon.pid; "
-                "for attempt in $(seq 1 100); do "
-                "[ -S /run/rugix/ctrl.sock ] && break; sleep 0.1; "
-                "done; "
-                "test -S /run/rugix/ctrl.sock; "
-                "chgrp rugix-daemon /run/rugix/ctrl.sock"
+                "useradd --system --gid rugix-daemon --no-create-home rugix-admin"
             ),
         ],
         hide=True,
@@ -79,6 +87,7 @@ def test_ctrl_daemon_update_installation(
     rugix: RugixCtrl,
     daemon_signed_bundle: Path,
 ) -> None:
+    """Install a verified update as an unprivileged daemon client."""
     assert_boot(rugix, default="a", active="a")
 
     ctrl_daemon_vm.upload(daemon_signed_bundle, REMOTE_BUNDLE)
@@ -121,6 +130,7 @@ def test_ctrl_daemon_update_installation(
 def test_ctrl_daemon_query_and_admission_policy(
     ctrl_daemon_vm: VMHandle,
 ) -> None:
+    """Query the recipe-configured daemon and verify its secure default policy."""
     daemon_info = ctrl_daemon_vm.run_json(
         [
             "runuser",

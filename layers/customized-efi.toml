@@ -8,6 +8,7 @@ recipes = [
     "core/persist-root-home",
     # Setup and enable SSH.
     "core/ssh",
+    "core/rugix-ctrl-daemon",
     # Setup the network.
     "setup-network",
     "setup-ssh",
