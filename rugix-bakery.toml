@@ -95,6 +95,11 @@ layer = "init-error-shell-disabled"
 architecture = "amd64"
 target = "generic-grub-efi"
 
+[systems.init-quiet]
+layer = "init-quiet"
+architecture = "amd64"
+target = "generic-grub-efi"
+
 [systems.init-error-shell-enabled]
 layer = "init-error-shell-enabled"
 architecture = "amd64"
