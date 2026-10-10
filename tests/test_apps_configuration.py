@@ -50,10 +50,11 @@ def _pack(
     app_dir: Path,
     project_dir: Path,
     *,
+    label: str,
     schema: str,
     default: str,
 ) -> Path:
-    output = project_dir / "apps" / "build" / f"generic-config_{schema}_amd64.rugixb"
+    output = project_dir / "apps" / "build" / f"generic-config_{label}_amd64.rugixb"
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
         output.unlink()
@@ -80,6 +81,7 @@ def app_bundle_v1(bakery: BakeryBuilder, app_dir: Path, project_dir: Path) -> Pa
         bakery,
         app_dir,
         project_dir,
+        label="v1",
         schema="config.schema.json",
         default="config.default.json",
     )
@@ -92,6 +94,7 @@ def app_bundle_v2(bakery: BakeryBuilder, app_dir: Path, project_dir: Path) -> Pa
         bakery,
         app_dir,
         project_dir,
+        label="v2",
         schema="config.schema.v2.json",
         default="config.default.v2.json",
     )
