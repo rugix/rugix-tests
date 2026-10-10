@@ -86,8 +86,9 @@ def test_apps_binary(
 
     info = amd64_vm.run_json(["rugix-ctrl", "apps", "info", APP_NAME])
     assert info["name"] == APP_NAME
-    assert info["state"]["state"] == "active"
-    assert info["state"]["generation"] == 1
+    assert info["orchestrator"] == "binary"
+    assert info["lifecycle"]["state"] == "active"
+    assert info["lifecycle"]["generation"] == 1
     assert isinstance(info["generations"], list) and len(info["generations"]) == 1
     assert info["generations"][0]["active"] is True
 
