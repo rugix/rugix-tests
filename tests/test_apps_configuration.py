@@ -113,12 +113,15 @@ def test_apps_configuration(
     assert _applied_config(amd64_vm) == {"endpoint": "https://default.example.com"}
     assert _config_get(amd64_vm) == {"endpoint": "https://default.example.com"}
     assert _generation(amd64_vm) == 1
+    assert _orchestrator(amd64_vm) == "generic"
     assert _configuration_revision(amd64_vm) is None
+    assert _desired_configuration_revision(amd64_vm) is None
 
     _write_json(amd64_vm, DEVICE_CONFIG_PATH, DEVICE_CONFIG)
     assert _config_set(amd64_vm, DEVICE_CONFIG_PATH) == 1
     assert _applied_config(amd64_vm) == DEVICE_CONFIG
     assert _configuration_revision(amd64_vm) == 1
+    assert _desired_configuration_revision(amd64_vm) == 1
 
     # Re-applying the same document reuses its revision and leaves the running
     # workload in place.
@@ -218,7 +221,15 @@ def _status(vm: VMHandle) -> Any:
 
 
 def _configuration_revision(vm: VMHandle) -> Any:
-    return _info(vm)["state"].get("configurationRevision")
+    return _info(vm)["lifecycle"].get("configurationRevision")
+
+
+def _desired_configuration_revision(vm: VMHandle) -> Any:
+    return _info(vm).get("desiredConfigurationRevision")
+
+
+def _orchestrator(vm: VMHandle) -> Any:
+    return vm.run_json(["rugix-ctrl", "apps", "list"])[APP_NAME].get("orchestrator")
 
 
 def _applied_config(vm: VMHandle) -> Any:
