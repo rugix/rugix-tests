@@ -13,10 +13,10 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+from rugix_testkit import CmdError, RugixCtrl, VMHandle
 
 from conftest import assert_boot, install_and_reboot
-from harness import BakeryBuilder
-from rugix_testkit import CmdError, RugixCtrl, VMHandle
+from harness import BakeryBuilder, Bundler
 
 CTRL_CONFIG = """\
 [signatures]
@@ -25,17 +25,16 @@ roots = ["/etc/rugix/root.crt"]
 
 
 @pytest.fixture(scope="session")
-def signed_bundle(bakery: BakeryBuilder, project_dir: Path) -> Path:
+def signed_bundle(bakery: BakeryBuilder, bundler: Bundler, project_dir: Path) -> Path:
     """Build a signed bundle: bake then sign with keys/signer.{crt,key}."""
     base = bakery.bake_bundle("customized-amd64")
     output = project_dir / "build" / "customized-amd64-signed.rugixb"
-    if not output.exists():
-        bakery.bundler_sign(
-            base,
-            project_dir / "keys" / "signer.crt",
-            project_dir / "keys" / "signer.key",
-            output,
-        )
+    bundler.sign(
+        base,
+        project_dir / "keys" / "signer.crt",
+        project_dir / "keys" / "signer.key",
+        output,
+    )
     return output
 
 

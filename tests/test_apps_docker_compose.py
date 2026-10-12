@@ -11,9 +11,9 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-
-from harness import BakeryBuilder
 from rugix_testkit import VMHandle
+
+from harness import Bundler
 
 APP_NAME = "website"
 URL = "http://localhost:8080/"
@@ -31,12 +31,12 @@ def boot_timeout() -> float:
 
 
 @pytest.fixture(scope="session")
-def website_bundle(bakery: BakeryBuilder, project_dir: Path) -> Path:
+def website_bundle(bundler: Bundler, project_dir: Path) -> Path:
     output = project_dir / "apps" / "build" / "docker-compose-website_amd64.rugixb"
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
         output.unlink()
-    bakery.bundler_apps_pack(
+    bundler.apps_pack(
         "docker-compose",
         [
             "--pull",

@@ -12,9 +12,9 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-
-from harness import BakeryBuilder
 from rugix_testkit import RugixCtrl, VMHandle
+
+from harness import Bundler
 
 
 @pytest.fixture
@@ -23,7 +23,7 @@ def boot_system() -> str:
 
 
 @pytest.fixture(scope="session")
-def slots_bundle(bakery: BakeryBuilder, project_dir: Path) -> Path:
+def slots_bundle(bundler: Bundler, project_dir: Path) -> Path:
     payloads = project_dir / "bundles" / "slots-bundle" / "payloads"
     test_tar = payloads / "test-dir.tar"
     test_tar.unlink(missing_ok=True)
@@ -34,7 +34,7 @@ def slots_bundle(bakery: BakeryBuilder, project_dir: Path) -> Path:
     output = project_dir / "build" / "slots-bundle.rugixb"
     if output.exists():
         output.unlink()
-    bakery.bundler_bundle(project_dir / "bundles" / "slots-bundle", output)
+    bundler.bundle(project_dir / "bundles" / "slots-bundle", output)
     return output
 
 

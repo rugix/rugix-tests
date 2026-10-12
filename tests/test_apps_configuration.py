@@ -17,9 +17,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
-from harness import BakeryBuilder
 from rugix_testkit import VMHandle
+
+from harness import Bundler
 
 APP_NAME = "hello-config"
 
@@ -46,7 +46,7 @@ def app_dir(project_dir: Path) -> Path:
 
 
 def _pack(
-    bakery: BakeryBuilder,
+    bundler: Bundler,
     app_dir: Path,
     project_dir: Path,
     *,
@@ -58,7 +58,7 @@ def _pack(
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
         output.unlink()
-    bakery.bundler_apps_pack(
+    bundler.apps_pack(
         "generic",
         [
             "--app",
@@ -75,10 +75,10 @@ def _pack(
 
 
 @pytest.fixture(scope="session")
-def app_bundle_v1(bakery: BakeryBuilder, app_dir: Path, project_dir: Path) -> Path:
+def app_bundle_v1(bundler: Bundler, app_dir: Path, project_dir: Path) -> Path:
     """Bundle whose schema requires only ``endpoint``."""
     return _pack(
-        bakery,
+        bundler,
         app_dir,
         project_dir,
         label="v1",
@@ -88,10 +88,10 @@ def app_bundle_v1(bakery: BakeryBuilder, app_dir: Path, project_dir: Path) -> Pa
 
 
 @pytest.fixture(scope="session")
-def app_bundle_v2(bakery: BakeryBuilder, app_dir: Path, project_dir: Path) -> Path:
+def app_bundle_v2(bundler: Bundler, app_dir: Path, project_dir: Path) -> Path:
     """Bundle whose schema additionally requires ``token``."""
     return _pack(
-        bakery,
+        bundler,
         app_dir,
         project_dir,
         label="v2",

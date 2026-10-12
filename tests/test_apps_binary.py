@@ -12,9 +12,9 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-
-from harness import BakeryBuilder
 from rugix_testkit import VMHandle
+
+from harness import Bundler
 
 APP_NAME = "hello-binary"
 
@@ -31,12 +31,12 @@ def boot_timeout() -> float:
 
 
 @pytest.fixture(scope="session")
-def binary_app_bundle(bakery: BakeryBuilder, project_dir: Path) -> Path:
+def binary_app_bundle(bundler: Bundler, project_dir: Path) -> Path:
     output = project_dir / "apps" / "build" / "binary-hello_amd64.rugixb"
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
         output.unlink()
-    bakery.bundler_apps_pack(
+    bundler.apps_pack(
         "binary",
         [
             "--app",

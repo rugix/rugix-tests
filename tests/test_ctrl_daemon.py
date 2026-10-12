@@ -8,7 +8,7 @@ import pytest
 from rugix_testkit import CmdError, RugixCtrl, VMHandle
 
 from conftest import assert_boot
-from harness import BakeryBuilder
+from harness import BakeryBuilder, Bundler
 
 CTRL_CONFIG = """\
 [signatures]
@@ -19,16 +19,17 @@ REJECTED_BUNDLE = "/tmp/rugix-ctrl-daemon-rejected.rugixb"
 
 
 @pytest.fixture(scope="session")
-def daemon_signed_bundle(bakery: BakeryBuilder, project_dir: Path) -> Path:
+def daemon_signed_bundle(
+    bakery: BakeryBuilder, bundler: Bundler, project_dir: Path
+) -> Path:
     base = bakery.bake_bundle("customized-amd64")
     output = project_dir / "build" / "customized-amd64-daemon-signed.rugixb"
-    if not output.exists():
-        bakery.bundler_sign(
-            base,
-            project_dir / "keys" / "signer.crt",
-            project_dir / "keys" / "signer.key",
-            output,
-        )
+    bundler.sign(
+        base,
+        project_dir / "keys" / "signer.crt",
+        project_dir / "keys" / "signer.key",
+        output,
+    )
     return output
 
 

@@ -13,9 +13,9 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-
-from harness import BakeryBuilder
 from rugix_testkit import VMHandle
+
+from harness import Bundler
 
 APP_NAME = "hello-generic"
 
@@ -31,12 +31,12 @@ def boot_timeout() -> float:
 
 
 @pytest.fixture(scope="session")
-def generic_app_bundle(bakery: BakeryBuilder, project_dir: Path) -> Path:
+def generic_app_bundle(bundler: Bundler, project_dir: Path) -> Path:
     output = project_dir / "apps" / "build" / "generic-hello_amd64.rugixb"
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
         output.unlink()
-    bakery.bundler_apps_pack(
+    bundler.apps_pack(
         "generic",
         ["--app", APP_NAME],
         project_dir / "apps" / "generic-hello" / "orchestrator",

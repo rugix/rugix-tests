@@ -10,18 +10,17 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-
-from harness import BakeryBuilder
 from rugix_testkit import RugixCtrl, VMHandle
+
+from harness import Bundler
 
 MARKER = "/run/rugix/state/the-update-script-was-here"
 
 
 @pytest.fixture(scope="session")
-def script_bundle(bakery: BakeryBuilder, project_dir: Path) -> Path:
+def script_bundle(bundler: Bundler, project_dir: Path) -> Path:
     output = project_dir / "build" / "script-bundle.rugixb"
-    if not output.exists():
-        bakery.bundler_bundle(project_dir / "bundles" / "script-bundle", output)
+    bundler.bundle(project_dir / "bundles" / "script-bundle", output)
     return output
 
 
