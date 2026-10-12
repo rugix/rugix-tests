@@ -21,8 +21,9 @@ PRIVATE_KEY = PROJECT_DIR / "keys" / "id_rsa"
 
 sys.path.insert(0, str(PROJECT_DIR))
 
-from harness import BakeryBuilder, build_amd64_vm_config  # noqa: E402
 from rugix_testkit import RugixCtrl, SystemInfo, VMHandle  # noqa: E402
+
+from harness import BakeryBuilder, Bundler, build_amd64_vm_config  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +87,11 @@ def private_key(project_dir: Path) -> Path:
 @pytest.fixture(scope="session")
 def bakery(project_dir: Path) -> BakeryBuilder:
     return BakeryBuilder(project_dir)
+
+
+@pytest.fixture(scope="session")
+def bundler(project_dir: Path) -> Bundler:
+    return Bundler(project_dir)
 
 
 @pytest.fixture(scope="session")

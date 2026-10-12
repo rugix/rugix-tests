@@ -11,19 +11,18 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+from rugix_testkit import RugixCtrl, VMHandle
 
 from conftest import assert_boot, install_and_reboot
-from harness import BakeryBuilder
-from rugix_testkit import RugixCtrl, VMHandle
+from harness import BakeryBuilder, Bundler
 
 
 @pytest.fixture(scope="session")
-def delta_bundle(bakery: BakeryBuilder, project_dir: Path) -> Path:
+def delta_bundle(bakery: BakeryBuilder, bundler: Bundler, project_dir: Path) -> Path:
     base = bakery.bake_bundle("customized-amd64")
     target = bakery.bake_bundle("customized-amd64-delta")
     output = project_dir / "build" / "delta.rugixb"
-    if not output.exists():
-        bakery.bundler_delta(base, target, output)
+    bundler.delta(base, target, output)
     return output
 
 

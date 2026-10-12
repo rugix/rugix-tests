@@ -10,11 +10,13 @@ Shared integration test infrastructure for the [Rugix](https://rugix.org) projec
 
 ## Running the Tests
 
-The system tests are written in pytest on top of [`rugix-testkit`](https://github.com/rugix/rugix-testkit). Images are baked inside the `rugix-bakery` container; QEMU runs on the host.
+The system tests use pytest and [`rugix-testkit`](https://github.com/rugix/rugix-testkit). Bakery builds OS images and system bundles in its container. App packing, bundle signing, static delta creation, and QEMU run on the host.
 
 Prerequisites:
 
 - A container runtime (`podman` or `docker`) for the bake stage.
+- A host `rugix-bundler` binary, selected with `RUGIX_BUNDLER` or found on PATH.
+- `skopeo` for bundling Compose images and `xdelta3` for static deltas. Compose builds also require Docker or Podman on the host.
 - `qemu-system-x86_64` and OVMF firmware on PATH (system packages, e.g. `qemu` from your distro or `nix-shell -p qemu`).
 - `mise`, which installs Python and `uv`. `rugix-testkit` and the other Python dependencies are fetched on first run.
 
@@ -29,7 +31,15 @@ Per-test artifacts (serial console, command history) land under `test-outputs/<n
 
 A few tests carry the `extended` marker (deb-package install variants, system-state persistence) and are skipped by default. Set `RUGIX_TESTS_EXTENDED=1` to run them.
 
-The pytest entrypoint automatically exports `RUGIX_BINARIES_DIR=../build/binaries` when that directory exists and the variable is not already set. `run-bakery` then bind-mounts those binaries into the Bakery container, which lets Rugix CI test freshly built Rugix binaries while Bakery CI can continue testing the binaries embedded in its own image.
+The pytest entrypoint sets `RUGIX_BINARIES_DIR=../build/binaries` when that directory exists and the variable is unset. Bakery mounts those binaries to install the current Ctrl into OS images. On Linux amd64 and arm64 hosts, Bundler also selects the matching musl binary from that directory. A missing selected binary fails the operation instead of falling back to another version.
+
+`RUGIX_BUNDLER` overrides that selection. For example, run against a specific build with:
+
+```bash
+RUGIX_BUNDLER=/path/to/rugix-bundler mise run test tests/test_apps_configuration.py
+```
+
+Bakery CI selects its Bundler build artifact explicitly while the OS images use the Ctrl embedded in the Bakery image.
 
 ## Licensing
 
