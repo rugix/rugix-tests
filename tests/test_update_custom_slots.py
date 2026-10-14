@@ -2,7 +2,8 @@
 
 Boots the ``customized-slots`` system, builds ``bundles/slots-bundle``
 (tarring its payloads first), installs it, and verifies that the slot
-payloads land at the expected paths under ``/run/rugix/state``.
+payloads land at the expected paths under ``/run/rugix/state``. The
+incremental update retains the file slot index without indexing custom slots.
 """
 
 from __future__ import annotations
@@ -45,6 +46,7 @@ def test_update_custom_slots(
     slots_bundle: Path,
     bundle_url: Callable[[Path], str],
 ) -> None:
+    """Install incremental file and custom payloads, retaining only the file index."""
     amd64_vm.run(["mkdir", "-p", "/run/rugix/state/app/custom-dir"], hide=True)
 
     for path in (
@@ -58,3 +60,9 @@ def test_update_custom_slots(
 
     amd64_vm.run(["test", "-e", "/run/rugix/state/test-file"], hide=True)
     amd64_vm.run(["test", "-e", "/run/rugix/state/app/custom-dir/test-file"], hide=True)
+
+    index_dir = "/run/rugix/mounts/data/rugix/slots"
+    index_name = "casync-64_sha512-256.rugix-block-index"
+    amd64_vm.run(["test", "-e", f"{index_dir}/test-file/{index_name}"], hide=True)
+    amd64_vm.run(["test", "!", "-e", f"{index_dir}/custom-dir/{index_name}"], hide=True)
+    amd64_vm.run(["test", "!", "-e", f"{index_dir}/system-a/{index_name}"], hide=True)
