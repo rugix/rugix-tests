@@ -3,6 +3,7 @@
 Packs ``apps/docker-compose-website`` via ``bundler apps pack
 docker-compose --pull``, installs into ``customized-amd64-docker``, and
 walks through the install / curl / activate / reboot / remove flow.
+Deactivation and removal must remove the app's Rugix-owned image tags.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from rugix_testkit import VMHandle
 from harness import Bundler
 
 APP_NAME = "website"
+APP_IMAGE_PREFIX = f"localhost/rugix-apps/{APP_NAME}/"
 URL = "http://localhost:8080/"
 EXPECTED_BODY = "Hello from Rugix Apps"
 
@@ -79,6 +81,7 @@ def test_apps_docker_compose(
     apps = amd64_vm.run_json(["rugix-ctrl", "apps", "list"])
     assert apps[APP_NAME]["status"]["state"] == "running"
     assert apps[APP_NAME]["generation"] == 1
+    assert _app_images(amd64_vm) != []
 
     _wait(amd64_vm, 2)
     body = amd64_vm.run(["curl", "-sf", URL], hide=True).stdout
@@ -87,6 +90,7 @@ def test_apps_docker_compose(
     amd64_vm.run(["rugix-ctrl", "apps", "deactivate", APP_NAME], hide=True)
     apps = amd64_vm.run_json(["rugix-ctrl", "apps", "list"])
     assert apps[APP_NAME]["status"]["state"] == "stopped"
+    assert _app_images(amd64_vm) == []
 
     amd64_vm.run(["rugix-ctrl", "apps", "activate", APP_NAME, "1"], hide=True)
     _wait(amd64_vm, 3)
@@ -118,11 +122,19 @@ def test_apps_docker_compose(
 
     amd64_vm.run(["rugix-ctrl", "apps", "remove", APP_NAME], hide=True)
     _assert_no_apps(amd64_vm)
+    assert _app_images(amd64_vm) == []
 
 
 def _assert_no_apps(vm: VMHandle) -> None:
     apps = vm.run_json(["rugix-ctrl", "apps", "list"])
     assert isinstance(apps, dict) and len(apps) == 0
+
+
+def _app_images(vm: VMHandle) -> list[str]:
+    output = vm.run(
+        ["docker", "image", "ls", "--format", "{{.Repository}}:{{.Tag}}"], hide=True
+    ).stdout
+    return [image for image in output.split() if image.startswith(APP_IMAGE_PREFIX)]
 
 
 def _wait(vm: VMHandle, seconds: int) -> None:
