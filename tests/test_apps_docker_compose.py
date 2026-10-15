@@ -133,6 +133,22 @@ def test_apps_docker_compose(
     body = amd64_vm.run(["curl", "-sf", URL], hide=True).stdout
     assert EXPECTED_BODY in body
 
+    # A second generation with the same images shares all stored content.
+    amd64_vm.run(
+        [
+            "rugix-ctrl",
+            "apps",
+            "install",
+            "--insecure-skip-bundle-verification",
+            bundle_url(website_bundle),
+        ],
+        timeout=600,
+        hide=True,
+    )
+    store_after_update = amd64_vm.run_json(["rugix-ctrl", "store", "info"])
+    assert store_after_update["refs"] == 2 * len(images)
+    assert store_after_update["storedSize"] == stored
+
     amd64_vm.run(["rugix-ctrl", "apps", "remove", APP_NAME], hide=True)
     _assert_no_apps(amd64_vm)
     store = amd64_vm.run_json(["rugix-ctrl", "store", "info"])
