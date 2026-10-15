@@ -3,11 +3,14 @@
 Packs ``apps/docker-compose-website`` via ``bundler apps pack
 docker-compose --pull``, installs into ``customized-amd64-docker``, and
 walks through the install / curl / activate / reboot / remove flow.
-Deactivation and removal must remove the app's Rugix-owned image tags.
+Deactivation and removal must remove the app's Rugix-owned image tags. The
+bundled image is kept in the content-addressed store, so reactivation loads
+it from there.
 """
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from pathlib import Path
 
@@ -83,6 +86,19 @@ def test_apps_docker_compose(
     assert apps[APP_NAME]["generation"] == 1
     assert _app_images(amd64_vm) != []
 
+    files = json.loads(
+        amd64_vm.run(["rugix-ctrl", "apps", "files", APP_NAME], hide=True).stdout
+    )
+    images = [file for file in files if file["path"].startswith("images/")]
+    assert images and all("object" in image for image in images)
+    store = amd64_vm.run_json(["rugix-ctrl", "store", "info"])
+    stored, referenced = store["storedSize"], store["referencedSize"]
+    assert store["refs"] == len(images)
+    assert (
+        isinstance(stored, int) and isinstance(referenced, int) and stored < referenced
+    )
+    assert amd64_vm.run_json(["rugix-ctrl", "store", "verify"])["problems"] == []
+
     _wait(amd64_vm, 2)
     body = amd64_vm.run(["curl", "-sf", URL], hide=True).stdout
     assert EXPECTED_BODY in body
@@ -120,9 +136,27 @@ def test_apps_docker_compose(
     body = amd64_vm.run(["curl", "-sf", URL], hide=True).stdout
     assert EXPECTED_BODY in body
 
+    # A second generation with the same images shares all stored content.
+    amd64_vm.run(
+        [
+            "rugix-ctrl",
+            "apps",
+            "install",
+            "--insecure-skip-bundle-verification",
+            bundle_url(website_bundle),
+        ],
+        timeout=600,
+        hide=True,
+    )
+    store_after_update = amd64_vm.run_json(["rugix-ctrl", "store", "info"])
+    assert store_after_update["refs"] == 2 * len(images)
+    assert store_after_update["storedSize"] == stored
+
     amd64_vm.run(["rugix-ctrl", "apps", "remove", APP_NAME], hide=True)
     _assert_no_apps(amd64_vm)
     assert _app_images(amd64_vm) == []
+    store = amd64_vm.run_json(["rugix-ctrl", "store", "info"])
+    assert (store["refs"], store["objects"], store["chunks"]) == (0, 0, 0)
 
 
 def _assert_no_apps(vm: VMHandle) -> None:
