@@ -1,8 +1,0 @@
-{
-  "type": "object",
-  "properties": {
-    "endpoint": { "type": "string" }
-  },
-  "required": ["endpoint"],
-  "additionalProperties": false
-}

@@ -1,2 +1,0 @@
-description = "configure the data partition for the LUKS2 passphrase driver"
-dependencies = ["core/pkg-update"]
